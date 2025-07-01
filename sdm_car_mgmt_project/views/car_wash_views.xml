@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Menu -->
+
+
+    <!-- Booking Action & Views -->
+    <record id="view_car_wash_booking_list" model="ir.ui.view">
+        <field name="name">car.wash.booking.list</field>
+        <field name="model">car.wash.booking</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="customer_id"/>
+                <field name="vehicle_id"/>
+                <field name="branch_id"/>
+                <field name="service_id"/>
+                <field name="time_slot"/>
+                <field name="amount_total"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_car_wash_booking_form" model="ir.ui.view">
+        <field name="name">car.wash.booking.form</field>
+        <field name="model">car.wash.booking</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_apply_promo" string="Apply Promo" type="object" class="btn-secondary"/>
+                    <button name="action_confirm_booking" string="Confirm Booking" type="object"
+                            class="btn-primary"/>
+                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="customer_id"/>
+                        <field name="vehicle_id"/>
+                        <field name="branch_id"/>
+                        <field name="service_id"/>
+                        <field name="time_slot"/>
+                        <field name="promo_code"/>
+                        <field name="loyalty_points_used"/>
+                        <field name="discount_amount" readonly="1"/>
+                        <field name="amount_total" readonly="1"/>
+                        <field name="state"/>
+                        <field name="washer_id"/>
+                        <field name="job_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_car_wash_booking" model="ir.actions.act_window">
+        <field name="name">Bookings</field>
+        <field name="res_model">car.wash.booking</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Services -->
+    <record id="view_car_wash_service_list" model="ir.ui.view">
+        <field name="name">car.wash.service.list</field>
+        <field name="model">car.wash.service</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="price"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_car_wash_service_form" model="ir.ui.view">
+        <field name="name">car.wash.service.form</field>
+        <field name="model">car.wash.service</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="price"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_car_wash_service" model="ir.actions.act_window">
+        <field name="name">Services</field>
+        <field name="res_model">car.wash.service</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Vehicles -->
+    <record id="view_car_vehicle_list" model="ir.ui.view">
+        <field name="name">car.vehicle.list</field>
+        <field name="model">car.vehicle</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="license_plate"/>
+                <field name="customer_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_car_vehicle_form" model="ir.ui.view">
+        <field name="name">car.vehicle.form</field>
+        <field name="model">car.vehicle</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="license_plate"/>
+                        <field name="customer_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_car_vehicle" model="ir.actions.act_window">
+        <field name="name">Vehicles</field>
+        <field name="res_model">car.vehicle</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- Branches -->
+    <record id="view_car_branch_list" model="ir.ui.view">
+        <field name="name">car.branch.list</field>
+        <field name="model">car.branch</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="address"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_car_branch_form" model="ir.ui.view">
+        <field name="name">car.branch.form</field>
+        <field name="model">car.branch</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="address"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_car_branch" model="ir.actions.act_window">
+        <field name="name">Branches</field>
+        <field name="res_model">car.branch</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+</odoo>

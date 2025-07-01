@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="menu_car_wash_root" name="Car Wash"/>
+    <menuitem id="menu_car_wash_management" name="Management" parent="menu_car_wash_root"/>
+    <menuitem id="menu_car_wash_booking" name="Bookings" parent="menu_car_wash_management" action="action_car_wash_booking"/>
+    <menuitem id="menu_car_wash_service" name="Services" parent="menu_car_wash_management" action="action_car_wash_service"/>
+    <menuitem id="menu_car_vehicle" name="Vehicles" parent="menu_car_wash_management" action="action_car_vehicle"/>
+    <menuitem id="menu_car_branch" name="Branches" parent="menu_car_wash_management" action="action_car_branch"/>
+</odoo>

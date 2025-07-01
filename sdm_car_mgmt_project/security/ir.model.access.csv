@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_car_wash_booking,access_car_wash_booking,model_car_wash_booking,,1,1,1,1
+access_car_wash_service,access_car_wash_service,model_car_wash_service,,1,1,1,1
+access_car_vehicle,access_car_vehicle,model_car_vehicle,,1,1,1,1
+access_car_branch,access_car_branch,model_car_branch,,1,1,1,1
+access_car_wash_job,access_car_wash_job,model_car_wash_job,,1,1,1,1

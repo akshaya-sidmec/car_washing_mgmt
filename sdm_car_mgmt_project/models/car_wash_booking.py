@@ -1,24 +1,30 @@
 from odoo import models, fields, api, _
+from datetime import datetime
 from odoo.exceptions import ValidationError
 import logging
-_logger = logging.getLogger(__name__)
+import re
 
+_logger = logging.getLogger(__name__)
 
 
 class CarWashBooking(models.Model):
     _name = 'car.wash.booking'
     _description = 'Car Wash Booking'
+    _rec_name = "invoice_number"
 
     customer_id = fields.Many2one('res.partner', string="Customer", required=True)
     vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
     branch_id = fields.Many2one('car.branch', string="Branch", required=True)
     service_id = fields.Many2one('car.wash.service', string="Service", required=True)
     time_slot = fields.Datetime(string="Preferred Time Slot", required=True)
+    apply_promo = fields.Boolean(string="Apply Promo Code")
     promo_code = fields.Char(string="Promo Code")
     loyalty_points_used = fields.Integer(string="Loyalty Points Used", default=0)
     discount_amount = fields.Monetary(string="Discount", compute='_compute_discount', store=True)
     amount_total = fields.Monetary(string="Total Amount", compute='_compute_total', store=True)
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
+    invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
+    booking_date = fields.Datetime(string="Booking Date", default=fields.Datetime.now)
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -28,6 +34,26 @@ class CarWashBooking(models.Model):
 
     washer_id = fields.Many2one('res.users', string="Assigned Washer")
     job_id = fields.Many2one('car.wash.job', string="Scheduled Job")
+
+
+    @api.model
+    def create(self, vals):
+        if not vals.get('invoice_number'):
+            booking_date = vals.get('booking_date') or fields.Datetime.now()
+            date_obj = fields.Datetime.to_datetime(booking_date)
+
+            date_str = date_obj.strftime("%d/%m/%Y")
+            prefix = f"CWS/{date_str}"
+
+            # Count how many bookings already have invoice number for this date
+            today_count = self.search_count([
+                ('invoice_number', 'like', prefix + '%')
+            ]) + 1
+
+            seq_num = str(today_count).zfill(3)
+            vals['invoice_number'] = f"{prefix}/{seq_num}"
+
+        return super().create(vals)
 
     @api.depends('service_id.price', 'loyalty_points_used')
     def _compute_discount(self):

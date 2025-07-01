@@ -10,6 +10,7 @@
         <field name="model">car.wash.booking</field>
         <field name="arch" type="xml">
             <list>
+                <field name="invoice_number"/>
                 <field name="customer_id"/>
                 <field name="vehicle_id"/>
                 <field name="branch_id"/>
@@ -27,23 +28,38 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_apply_promo" string="Apply Promo" type="object" class="btn-secondary"/>
-                    <button name="action_confirm_booking" string="Confirm Booking" type="object"
-                            class="btn-primary"/>
-                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>
+                    <!--                    <button name="action_apply_promo" string="Apply Promo" type="object" class="btn-secondary" invisible="not apply_promo"/>-->
+                    <!--                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>-->
+                    <button name="action_confirm_booking" string="Confirm Booking" type="object" class="btn-primary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,scheduled"/>
+
                 </header>
                 <sheet>
+                    <h1>
+                        <field name="invoice_number" placeholder="Invoice Number" readonly="1"/>
+                    </h1>
                     <group>
-                        <field name="customer_id"/>
-                        <field name="vehicle_id"/>
-                        <field name="branch_id"/>
-                        <field name="service_id"/>
-                        <field name="time_slot"/>
-                        <field name="promo_code"/>
-                        <field name="loyalty_points_used"/>
-                        <field name="discount_amount" readonly="1"/>
-                        <field name="amount_total" readonly="1"/>
-                        <field name="state"/>
+                        <group string="Choose Service, Vehicle and Slot Time">
+                            <field name="customer_id"/>
+                            <field name="vehicle_id"/>
+                            <field name="branch_id"/>
+                            <field name="service_id"/>
+                            <field name="time_slot"/>
+                        </group>
+
+                        <group string="Apply Promo code">
+                            <field name="apply_promo"/>
+                            <field name="promo_code" invisible="not apply_promo"/>
+                            <field name="loyalty_points_used" invisible="not apply_promo"/>
+                            <field name="discount_amount" readonly="1" invisible="not apply_promo"/>
+                            <field name="amount_total" readonly="1" invisible="not apply_promo"/>
+                            <button name="action_apply_promo" string="Apply Promo" type="object"
+                                    class="btn-outline-secondary" invisible="not apply_promo"/>
+                        </group>
+                    </group>
+
+
+                    <group string="Booking Status and Schedule">
                         <field name="washer_id"/>
                         <field name="job_id"/>
                     </group>
@@ -51,6 +67,7 @@
             </form>
         </field>
     </record>
+
 
     <record id="action_car_wash_booking" model="ir.actions.act_window">
         <field name="name">Bookings</field>

@@ -116,6 +116,17 @@ class CarVehicle(models.Model):
     license_plate = fields.Char(string="License Plate")
     customer_id = fields.Many2one('res.partner', string="Owner")
 
+    @api.constrains('license_plate')
+    def _check_license_plate_format(self):
+        pattern = r'^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$'
+        for rec in self:
+            if rec.license_plate and not re.match(pattern, rec.license_plate.upper().replace(" ", "")):
+                raise ValidationError(
+                    _("Invalid License Plate format. Please enter in the format: "
+                      "StateCode(2) + RTONumber(2) + Series(1-2) + Number(4). "
+                      "Example: AP16AB1234")
+                )
+
 
 class CarBranch(models.Model):
     _name = 'car.branch'

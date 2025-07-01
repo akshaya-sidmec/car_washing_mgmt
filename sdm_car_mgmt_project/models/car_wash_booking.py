@@ -10,10 +10,12 @@ _logger = logging.getLogger(__name__)
 class CarWashBooking(models.Model):
     _name = 'car.wash.booking'
     _description = 'Car Wash Booking'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "invoice_number"
 
     customer_id = fields.Many2one('res.partner', string="Customer", required=True)
     vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
+    license_plate_id = fields.Many2one('car.vehicle', string="Vehicle Number", required=True)
     branch_id = fields.Many2one('car.branch', string="Branch", required=True)
     service_id = fields.Many2one('car.wash.service', string="Service", required=True)
     time_slot = fields.Datetime(string="Preferred Time Slot", required=True)
@@ -113,19 +115,26 @@ class CarVehicle(models.Model):
     _description = 'Customer Vehicle'
 
     name = fields.Char(required=True)
-    license_plate = fields.Char(string="License Plate")
-    customer_id = fields.Many2one('res.partner', string="Owner")
+    license_plate = fields.Char(string="License Plate", required=True)
+    customer_id = fields.Many2one('res.partner', string="Owner", required=True)
 
     @api.constrains('license_plate')
     def _check_license_plate_format(self):
         pattern = r'^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$'
         for rec in self:
             if rec.license_plate and not re.match(pattern, rec.license_plate.upper().replace(" ", "")):
-                raise ValidationError(
-                    _("Invalid License Plate format. Please enter in the format: "
-                      "StateCode(2) + RTONumber(2) + Series(1-2) + Number(4). "
-                      "Example: AP16AB1234")
-                )
+                raise ValidationError("Invalid License Plate format. Please enter in the format")
+
+    @api.model
+    def create(self, vals):
+        if vals.get('license_plate'):
+            vals['license_plate'] = vals['license_plate'].upper().replace(" ", "")
+        return super().create(vals)
+
+    def write(self, vals):
+        if vals.get('license_plate'):
+            vals['license_plate'] = vals['license_plate'].upper().replace(" ", "")
+        return super().write(vals)
 
 
 class CarBranch(models.Model):

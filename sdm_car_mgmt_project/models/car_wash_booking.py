@@ -115,10 +115,9 @@ class CarWashService(models.Model):
 class CarVehicle(models.Model):
     _name = 'car.vehicle'
     _description = 'Customer Vehicle'
-    _rec_name = 'license_plate'
+    _rec_name = 'name'
 
     name = fields.Char(required=True)
-    # vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
     vehicle_id = fields.Many2one('car.vehicle', string="Vehicle")
     license_plate = fields.Char(string="License Plate", required=True)
     customer_id = fields.Many2one('res.partner', string="Owner", required=True)

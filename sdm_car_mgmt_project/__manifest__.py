@@ -22,6 +22,8 @@
         "security/ir.model.access.csv",
         "views/car_wash_views.xml",
         "views/service_category.xml",
+        # "wizard/wizard.xml",
+        "data/email_template.xml",
         "views/menu.xml",
     ],
 

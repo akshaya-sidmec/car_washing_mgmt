@@ -15,7 +15,7 @@ class CarWashBooking(models.Model):
 
     customer_id = fields.Many2one('res.partner', string="Customer", required=True)
     vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
-    license_plate_id = fields.Many2one('car.vehicle', string="Vehicle Number", required=True)
+    license_plate_id_1 = fields.Char(related="vehicle_id.license_plate", string="Vehicle Number", required=True)
     branch_id = fields.Many2one('car.branch', string="Branch", required=True)
     service_id = fields.Many2one('car.wash.service', string="Service", required=True)
     time_slot = fields.Datetime(string="Preferred Time Slot", required=True)
@@ -113,8 +113,10 @@ class CarWashService(models.Model):
 class CarVehicle(models.Model):
     _name = 'car.vehicle'
     _description = 'Customer Vehicle'
+    _rec_name = 'license_plate'
 
     name = fields.Char(required=True)
+    vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
     license_plate = fields.Char(string="License Plate", required=True)
     customer_id = fields.Many2one('res.partner', string="Owner", required=True)
 

@@ -1,6 +1,6 @@
-from odoo import models, fields, api, _
+from odoo import models, fields, api
 from datetime import datetime
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError,UserError
 import logging
 import re
 
@@ -37,6 +37,29 @@ class CarWashBooking(models.Model):
     washer_id = fields.Many2one('res.users', string="Assigned Washer")
     job_id = fields.Many2one('car.wash.job', string="Scheduled Job")
 
+    payment_state = fields.Selection([
+        ('unpaid', 'Unpaid'),
+        ('paid', 'Paid'),
+    ], default='unpaid', string="Payment Status", tracking=True)
+
+    payment_date = fields.Date(string="Payment Date")
+    amount_paid = fields.Monetary(string="Amount Paid", currency_field='currency_id')
+
+    def action_register_payment(self):
+        for rec in self:
+            if rec.payment_state == 'paid':
+                raise UserError("This booking is already marked as paid.")
+            return {
+                'name': 'Register Payment',
+                'type': 'ir.actions.act_window',
+                'res_model': 'car.wash.payment.wizard',
+                'view_mode': 'form',
+                'target': 'new',
+                'context': {
+                    'default_booking_id': rec.id,
+                    'default_amount': rec.amount_total,
+                }
+            }
 
     @api.model
     def create(self, vals):
@@ -73,12 +96,14 @@ class CarWashBooking(models.Model):
                 rec.discount_amount += 10
 
     def action_confirm_booking(self):
+        template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
         for rec in self:
             if rec.state != 'draft':
                 continue
             rec.state = 'confirmed'
-            rec._send_confirmation_email()
-            rec._send_confirmation_sms()
+            if template_id:
+                template_id.send_mail(rec.id, force_send=True)
+            # rec._send_confirmation_sms()
 
     def action_schedule_job(self):
         for rec in self:
@@ -152,3 +177,5 @@ class CarWashJob(models.Model):
     booking_id = fields.Many2one('car.wash.booking', required=True)
     washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
     scheduled_time = fields.Datetime(required=True)
+
+

@@ -33,7 +33,8 @@
                     <!--                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>-->
                     <button name="action_confirm_booking" string="Confirm Booking" type="object" class="btn-primary"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,scheduled"/>
-
+                    <button name="action_register_payment" type="object" string="Register Payment" class="btn-primary"
+                            invisible="state != 'confirmed' and payment_state == 'paid'"/>
                 </header>
                 <sheet>
                     <h1>

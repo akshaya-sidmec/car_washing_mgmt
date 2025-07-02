@@ -6,3 +6,4 @@ access_car_branch,access_car_branch,model_car_branch,,1,1,1,1
 access_car_wash_job,access_car_wash_job,model_car_wash_job,,1,1,1,1
 access_car_wash_category,access_car_wash_category,model_car_wash_category,,1,1,1,1
 access_car_wash_package,access_car_wash_package,model_car_wash_package,,1,1,1,1
+access_car_wash_payment_wizard,access_car_wash_payment_wizard,model_car_wash_payment_wizard,,1,1,1,1

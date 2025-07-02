@@ -1,5 +1,5 @@
+from odoo import models, fields, api
 
-from odoo import models, fields
 
 class CarWashCategory(models.Model):
     _name = 'car.wash.category'
@@ -19,6 +19,13 @@ class CarWashPackage(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(required=True, string="Package Name")
-    price = fields.Float(required=True, string="Package Price")
+    price = fields.Float(string="Package Price", compute='_compute_package_price', store=True, readonly=True)
     service_ids = fields.Many2many('car.wash.service', string="Included Services")
 
+    @api.depends('service_ids')
+    def _compute_package_price(self):
+        for package in self:
+            total_price = 0.0
+            for service in package.service_ids:
+                total_price += service.price
+            package.price = total_price

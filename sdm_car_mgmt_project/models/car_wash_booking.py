@@ -14,17 +14,23 @@ class CarWashBooking(models.Model):
     _rec_name = "invoice_number"
 
     customer_id = fields.Many2one('res.partner', string="Customer", required=True)
-    vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
-    license_plate_id_1 = fields.Char(related="vehicle_id.license_plate", string="Vehicle Number", required=True)
+    vehicle_number = fields.Char(string="Vehicle Number")
+    vehicle_name = fields.Char(string="Vehicle Name")
+    vehicle_type = fields.Char(string="Vehicle Type")
+    vehicle_id = fields.Many2one('car.vehicle', string="Vehicle")
+    license_plate_id_1 = fields.Char(related="vehicle_id.license_plate", string="Vehicle Number")
     branch_id = fields.Many2one('car.branch', string="Branch", required=True)
     service_id = fields.Many2one('car.wash.service', string="Service", required=True)
+    service_ids = fields.Many2many('car.wash.service', string="Services", required=True)
+    total_price = fields.Monetary(string="Total Price", compute='_compute_total_price', store=True)
+
     time_slot = fields.Datetime(string="Preferred Time Slot", required=True)
     apply_promo = fields.Boolean(string="Apply Promo Code")
     promo_code = fields.Char(string="Promo Code")
     loyalty_points_used = fields.Integer(string="Loyalty Points Used", default=0)
     discount_amount = fields.Monetary(string="Discount", compute='_compute_discount', store=True)
     amount_total = fields.Monetary(string="Total Amount", compute='_compute_total', store=True)
-    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
+    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id, readonly=True)
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     booking_date = fields.Datetime(string="Booking Date", default=fields.Datetime.now)
 
@@ -37,6 +43,40 @@ class CarWashBooking(models.Model):
     washer_id = fields.Many2one('res.users', string="Assigned Washer")
     job_id = fields.Many2one('car.wash.job', string="Scheduled Job")
 
+    @api.depends('service_ids', 'service_ids.price')
+    def _compute_total_price(self):
+        for record in self:
+            record.total_price = sum(service.price for service in record.service_ids)
+
+    @api.onchange('vehicle_number')
+    def _onchange_vehicle_number(self):
+        if self.vehicle_number:
+            cleaned = self.vehicle_number.replace(' ', '').upper()
+            pattern = r'^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$'
+            if re.match(pattern, cleaned):
+                # Format as "TS 10 EQ 0297"
+                state = cleaned[0:2]
+                district = cleaned[2:4]
+                series = cleaned[4:-4]
+                number = cleaned[-4:]
+                self.vehicle_number = f"{state} {district} {series} {number}"
+            else:
+                # Temporarily show warning-style message on screen (does not block saving)
+                return {
+                    'warning': {
+                        'title': "Invalid Vehicle Number",
+                        'message': "Please enter a valid vehicle number like TS10EQ0297",
+                    }
+                }
+
+    @api.constrains('vehicle_number')
+    def _check_vehicle_number_format(self):
+        for record in self:
+            if record.vehicle_number:
+                cleaned = record.vehicle_number.replace(' ', '').upper()
+                pattern = r'^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$'
+                if not re.match(pattern, cleaned):
+                    raise ValidationError("Vehicle Number must match format: TS 10 EQ 0297")
 
     @api.model
     def create(self, vals):
@@ -103,13 +143,20 @@ class CarWashBooking(models.Model):
         _logger.info(f"SMS sent to customer {self.customer_id.mobile} for booking #{self.id}")
 
 
+# car_wash_service.py
 class CarWashService(models.Model):
     _name = 'car.wash.service'
     _description = 'Car Wash Service'
 
     name = fields.Char(required=True)
     price = fields.Monetary(required=True)
-    currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id)
+    currency_id = fields.Many2one(
+        'res.currency',
+        string="Currency",
+        default=lambda self: self.env.company.currency_id,
+        readonly=True
+    )
+
 
 
 class CarVehicle(models.Model):
@@ -117,9 +164,9 @@ class CarVehicle(models.Model):
     _description = 'Customer Vehicle'
     _rec_name = 'license_plate'
 
-    name = fields.Char(required=True)
-    vehicle_id = fields.Many2one('car.vehicle', string="Vehicle", required=True)
-    license_plate = fields.Char(string="License Plate", required=True)
+    name = fields.Char(string="Vehicle Name", required=True)
+    vehicle_id = fields.Many2one('car.vehicle', string="Vehicle")
+    license_plate = fields.Char(string="Vehicle Number", required=True)
     customer_id = fields.Many2one('res.partner', string="Owner", required=True)
 
     @api.constrains('license_plate')

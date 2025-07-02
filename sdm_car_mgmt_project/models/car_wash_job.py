@@ -13,11 +13,14 @@ class CarWashChecklistLine(models.Model):
 
 class CarWashJob(models.Model):
     _name = 'car.wash.job'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Washer Job Scheduler'
 
     booking_id = fields.Many2one('car.wash.booking', required=True)
     washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
     scheduled_time = fields.Datetime(required=True)
+
+
 
     state = fields.Selection([
         ('draft', 'Draft'),

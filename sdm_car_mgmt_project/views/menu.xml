@@ -6,4 +6,12 @@
     <menuitem id="menu_car_wash_service" name="Services" parent="menu_car_wash_management" action="action_car_wash_service"/>
     <menuitem id="menu_car_vehicle" name="Vehicles" parent="menu_car_wash_management" action="action_car_vehicle"/>
     <menuitem id="menu_car_branch" name="Branches" parent="menu_car_wash_management" action="action_car_branch"/>
+     <menuitem id="menu_car_wash_master_data" name="Categories" parent="menu_car_wash_root"/>
+    <menuitem id="menu_car_wash_category" name="Service Categories" parent="menu_car_wash_master_data" action="action_car_wash_category" />
+    <menuitem id="menu_car_wash_package" name="Service Packages" parent="menu_car_wash_master_data" action="action_car_wash_package"/>
+    <menuitem id="menu_car_wash_dashboard" name="Dashboard" parent="menu_car_wash_root" sequence="1"/>
+    <menuitem id="menu_car_wash_booking" name="Booking" parent="menu_car_wash_root" sequence="2"/>
+    <menuitem id="menu_car_wash_booking_appointments" name="Appointments" parent="menu_car_wash_booking" action="action_car_wash_booking" sequence="1"/>
+    <menuitem id="menu_car_wash_job" name="Jobs" parent="menu_car_wash_root" sequence="3"/>
+
 </odoo>

@@ -21,6 +21,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/car_wash_views.xml",
+        "views/service_category.xml",
         "views/menu.xml",
     ],
 

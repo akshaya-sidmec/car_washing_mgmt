@@ -13,6 +13,7 @@
                 <field name="invoice_number"/>
                 <field name="customer_id"/>
                 <field name="vehicle_id"/>
+                <field name="license_plate_id_1"/>
                 <field name="branch_id"/>
                 <field name="service_id"/>
                 <field name="time_slot"/>
@@ -42,6 +43,7 @@
                         <group string="Choose Service, Vehicle and Slot Time">
                             <field name="customer_id"/>
                             <field name="vehicle_id"/>
+                            <field name="license_plate_id_1"/>
                             <field name="branch_id"/>
                             <field name="service_id"/>
                             <field name="time_slot"/>
@@ -64,6 +66,7 @@
                         <field name="job_id"/>
                     </group>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -116,9 +119,10 @@
         <field name="model">car.vehicle</field>
         <field name="arch" type="xml">
             <list>
-                <field name="name"/>
-                <field name="license_plate"/>
                 <field name="customer_id"/>
+                <field name="vehicle_id"/>
+                <field name="license_plate"/>
+<!--                <field name="name"/>-->
             </list>
         </field>
     </record>

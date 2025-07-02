@@ -22,12 +22,11 @@
         "security/ir.model.access.csv",
         "views/car_wash_views.xml",
         "views/service_category.xml",
-<<<<<<< Updated upstream
         # "wizard/wizard.xml",
         "data/email_template.xml",
-=======
+
         "views/car_wash_job_views.xml",
->>>>>>> Stashed changes
+
         "views/menu.xml",
     ],
 

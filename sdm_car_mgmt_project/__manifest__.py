@@ -20,6 +20,9 @@
 
     "data": [
         "security/ir.model.access.csv",
+        "views/hr_employee.xml",
+        "views/res_partner.xml",
+        "views/car_wash_job.xml",
         "views/car_wash_views.xml",
         "views/service_category.xml",
         "views/menu.xml",

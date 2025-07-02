@@ -73,12 +73,14 @@ class CarWashBooking(models.Model):
                 rec.discount_amount += 10
 
     def action_confirm_booking(self):
+        template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
         for rec in self:
             if rec.state != 'draft':
                 continue
             rec.state = 'confirmed'
-            rec._send_confirmation_email()
-            rec._send_confirmation_sms()
+            if template_id:
+                template_id.send_mail(rec.id, force_send=True)
+            # rec._send_confirmation_sms()
 
     def action_schedule_job(self):
         for rec in self:

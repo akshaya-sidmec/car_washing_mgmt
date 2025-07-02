@@ -25,7 +25,7 @@
                         </p>
                         <ul>
                             <li><strong>Service:</strong> <t t-out="object.service_id.name"/></li>
-                            <li><strong>Vehicle:</strong> <t t-out="object.vehicle_id.name"/> (<t t-out="object.license_plate_id.license_plate"/>)</li>
+                            <li><strong>Vehicle:</strong> <t t-out="object.vehicle_id.name or ''"/> (<t t-out="object.license_plate_id_1 or ''"/>)</li>
                             <li><strong>Preferred Time Slot:</strong> <t t-out="object.time_slot.strftime('%d %B %Y %I:%M %p')"/></li>
                             <li><strong>Branch:</strong> <t t-out="object.branch_id.name"/></li>
                             <li><strong>Total Amount:</strong> <t t-out="object.amount_total"/> <t t-out="object.currency_id.symbol"/></li>

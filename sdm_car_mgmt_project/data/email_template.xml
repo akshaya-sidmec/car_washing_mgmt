@@ -12,7 +12,7 @@
             <table border="0" cellpadding="0" cellspacing="0"
                    style="padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;">
                 <tr>
-                    <td align="center" style="min-width: 590px; padding: 20px;">
+                    <td align="left" style="min-width: 590px; padding: 20px;">
                         <h3>Booking Confirmation</h3>
                         <p>
                             Dear <t t-out="object.customer_id.name"/>,
@@ -25,10 +25,10 @@
                         </p>
                         <ul>
                             <li><strong>Service:</strong> <t t-out="object.service_id.name"/></li>
-                            <li><strong>Vehicle:</strong> <t t-out="object.vehicle_id.name"/> (<t t-out="object.license_plate_id.license_plate"/>)</li>
+                            <li><strong>Vehicle Number:</strong> <t t-out="object.vehicle_number"/></li>
                             <li><strong>Preferred Time Slot:</strong> <t t-out="object.time_slot.strftime('%d %B %Y %I:%M %p')"/></li>
                             <li><strong>Branch:</strong> <t t-out="object.branch_id.name"/></li>
-                            <li><strong>Total Amount:</strong> <t t-out="object.amount_total"/> <t t-out="object.currency_id.symbol"/></li>
+                            <li><strong>Total Amount:</strong> <t t-out="object.total_price"/> <t t-out="object.currency_id.symbol"/></li>
                         </ul>
                         <p>
                             We look forward to seeing you!

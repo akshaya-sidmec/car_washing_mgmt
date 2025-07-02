@@ -20,6 +20,7 @@
 
     "data": [
         "security/ir.model.access.csv",
+        "data/email_template.xml",
         "views/hr_employee.xml",
         "views/res_partner.xml",
         "views/car_wash_job.xml",

@@ -20,8 +20,8 @@ class CarWashBooking(models.Model):
     vehicle_id = fields.Many2one('car.vehicle', string="Vehicle")
     license_plate_id_1 = fields.Char(related="vehicle_id.license_plate", string="Vehicle Number")
     branch_id = fields.Many2one('car.branch', string="Branch", required=True)
-    service_id = fields.Many2one('car.wash.service', string="Service", required=True)
-    service_ids = fields.Many2many('car.wash.service', string="Services", required=True)
+    service_id = fields.Many2one('car.wash.service', string="Service")
+    service_ids = fields.Many2many('car.wash.service', string="Services")
     total_price = fields.Monetary(string="Total Price", compute='_compute_total_price', store=True)
 
     time_slot = fields.Datetime(string="Preferred Time Slot", required=True)
@@ -33,6 +33,19 @@ class CarWashBooking(models.Model):
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id, readonly=True)
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     booking_date = fields.Datetime(string="Booking Date", default=fields.Datetime.now)
+    select_package = fields.Boolean(string="Select Package")
+
+    package_id = fields.Many2one('car.wash.package', string="Package", domain="[('id', '!=', False)]")
+
+    package_price = fields.Float(string="Package Price", readonly=True)
+    package_service_ids = fields.Many2many(
+        'car.wash.service',
+        'car_wash_booking_package_service_rel',  # Unique relation table name
+        'booking_id',
+        'service_id',
+        string="Included Services from Package",
+        readonly=True
+    )
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -43,10 +56,22 @@ class CarWashBooking(models.Model):
     washer_id = fields.Many2one('res.users', string="Assigned Washer")
     job_id = fields.Many2one('car.wash.job', string="Scheduled Job")
 
+    @api.onchange('package_id')
+    def _onchange_package_id(self):
+        if self.package_id:
+            self.package_price = self.package_id.price
+            self.package_service_ids = self.package_id.service_ids
+        else:
+            self.package_price = 0.0
+            self.package_service_ids = [(5, 0, 0)]
+
     @api.depends('service_ids', 'service_ids.price')
     def _compute_total_price(self):
         for record in self:
-            record.total_price = sum(service.price for service in record.service_ids)
+            if record.select_package and record.package_id:
+                record.total_price = record.package_id.price
+            else:
+                record.total_price = sum(service.price for service in record.service_ids)
 
     @api.onchange('vehicle_number')
     def _onchange_vehicle_number(self):
@@ -95,7 +120,19 @@ class CarWashBooking(models.Model):
             seq_num = str(today_count).zfill(3)
             vals['invoice_number'] = f"{prefix}/{seq_num}"
 
-        return super().create(vals)
+        if vals.get('package_id'):
+            package = self.env['car.wash.package'].browse(vals['package_id'])
+            vals['package_price'] = package.price
+            vals['package_service_ids'] = [(6, 0, package.service_ids.ids)]
+
+        return super(CarWashBooking, self).create(vals)
+
+    def write(self, vals):
+        if vals.get('package_id'):
+            package = self.env['car.wash.package'].browse(vals['package_id'])
+            vals['package_price'] = package.price
+            vals['package_service_ids'] = [(6, 0, package.service_ids.ids)]
+        return super(CarWashBooking, self).write(vals)
 
     @api.depends('service_id.price', 'loyalty_points_used')
     def _compute_discount(self):
@@ -112,25 +149,75 @@ class CarWashBooking(models.Model):
             if rec.promo_code == "SAVE10":
                 rec.discount_amount += 10
 
+    # def action_confirm_booking(self):
+    #     template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
+    #     for rec in self:
+    #         if rec.state != 'draft':
+    #             continue
+    #         rec.state = 'confirmed'
+    #         if template_id:
+    #             template_id.send_mail(rec.id, force_send=True)
+    #         # rec._send_confirmation_sms()
+
     def action_confirm_booking(self):
         template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
         for rec in self:
             if rec.state != 'draft':
                 continue
+
             rec.state = 'confirmed'
+
+            # Send confirmation email
             if template_id:
                 template_id.send_mail(rec.id, force_send=True)
-            # rec._send_confirmation_sms()
+
+            # Automatically create job on confirmation
+            job = self.env['car.wash.job'].create({
+                'booking_id': rec.id,
+                'washer_id': rec.washer_id.id,
+                'scheduled_time': rec.time_slot,
+                'customer_id': rec.customer_id.id,
+                'vehicle_number': rec.vehicle_number,
+                'vehicle_name': rec.vehicle_name,
+                'vehicle_type': rec.vehicle_type,
+                'branch_id': rec.branch_id.id,
+                'service_ids': [(6, 0, rec.service_ids.ids)],
+                'package_id': rec.package_id.id,
+                'package_price': rec.package_price,
+                'package_service_ids': [(6, 0, rec.package_service_ids.ids)],
+                'select_package': rec.select_package,
+                'total_price': rec.total_price,
+                'currency_id': rec.currency_id.id,
+                'scheduled_time': rec.time_slot,
+
+            })
+
+            rec.job_id = job.id
 
     def action_schedule_job(self):
         for rec in self:
             if rec.state != 'confirmed':
                 continue
+
             job = self.env['car.wash.job'].create({
                 'booking_id': rec.id,
                 'washer_id': rec.washer_id.id,
                 'scheduled_time': rec.time_slot,
+                'customer_id': rec.customer_id.id,
+                'vehicle_number': rec.vehicle_number,
+                'vehicle_name': rec.vehicle_name,
+                'vehicle_type': rec.vehicle_type,
+                'branch_id': rec.branch_id.id,
+                'service_ids': [(6, 0, rec.service_ids.ids)],
+                'package_id': rec.package_id.id,
+                'package_price': rec.package_price,
+                'package_service_ids': [(6, 0, rec.package_service_ids.ids)],
+                'select_package': rec.select_package,
+                'total_price': rec.total_price,
+                'currency_id': rec.currency_id.id,
+                'invoice_number': rec.invoice_number.id,
             })
+
             rec.job_id = job.id
             rec.state = 'scheduled'
 
@@ -156,6 +243,7 @@ class CarWashService(models.Model):
         default=lambda self: self.env.company.currency_id,
         readonly=True
     )
+    Description = fields.Text(string="Service Description")
 
 
 
@@ -196,10 +284,10 @@ class CarBranch(models.Model):
     address = fields.Text()
 
 
-class CarWashJob(models.Model):
-    _name = 'car.wash.job'
-    _description = 'Washer Job Scheduler'
-
-    booking_id = fields.Many2one('car.wash.booking', required=True)
-    washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
-    scheduled_time = fields.Datetime(required=True)
+# class CarWashJob(models.Model):
+#     _name = 'car.wash.job'
+#     _description = 'Washer Job Scheduler'
+#
+#     booking_id = fields.Many2one('car.wash.booking', required=True)
+#     washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
+#     scheduled_time = fields.Datetime(required=True)

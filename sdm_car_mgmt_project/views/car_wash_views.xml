@@ -21,7 +21,7 @@
                 <!--                <field name="service_id"/>-->
                 <field name="service_ids" widget="many2many_tags"/>
                 <field name="time_slot"/>
-<!--                <field name="amount_total"/>-->
+                <!--                <field name="amount_total"/>-->
                 <field name="total_price"/>
                 <field name="state"/>
             </list>
@@ -57,6 +57,23 @@
                             <field name="branch_id"/>
                             <!--                            <field name="service_id"/>-->
                             <field name="service_ids" widget="many2many_tags"/>
+
+
+                            <field name="select_package"/>
+
+                            <field name="package_id"
+                                   invisible="not select_package"/>
+
+
+                            <field name="package_service_ids"
+                                   widget="many2many_tags"
+                                   readonly="1"
+                                   invisible="not select_package"/>
+
+                            <field name="package_price"
+                                   readonly="1"
+                                   invisible="not select_package"/>
+
                             <field name="total_price"/>
                             <field name="time_slot"/>
                         </group>
@@ -112,6 +129,7 @@
                     <group>
                         <field name="name"/>
                         <field name="price"/>
+                        <field name="Description"/>
                     </group>
                 </sheet>
             </form>

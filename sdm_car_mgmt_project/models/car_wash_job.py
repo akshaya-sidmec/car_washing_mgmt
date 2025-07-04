@@ -7,7 +7,7 @@ class CarWashChecklistLine(models.Model):
     _description = 'Checklist Step'
 
     name = fields.Char(required=True)
-    is_done = fields.Boolean()
+    is_done = fields.Boolean(string="Done")
     job_id = fields.Many2one('car.wash.job', ondelete='cascade')
 
 
@@ -86,6 +86,29 @@ class CarWashJob(models.Model):
     is_checked = fields.Boolean()
 
     merged_services_html = fields.Html(string="Checklist", compute="_compute_merged_services_html")
+
+    def action_regenerate_checklist(self):
+        for job in self:
+            job.checklist_line_ids.unlink()  # delete existing
+            services = job.booking_id.service_ids | job.booking_id.package_service_ids
+            lines = [(0, 0, {'name': s.name}) for s in services]
+            job.checklist_line_ids = lines
+
+    @api.model
+    def create(self, vals):
+        job = super().create(vals)
+
+        booking = job.booking_id
+
+        # Merge all service names from both service_ids and package_service_ids
+        all_services = booking.service_ids | booking.package_service_ids
+
+        # Create checklist lines
+        checklist_lines = [(0, 0, {'name': service.name, 'is_done': False}) for service in all_services]
+
+        job.checklist_line_ids = checklist_lines
+
+        return job
 
     @api.depends('service_ids', 'package_service_ids')
     def _compute_merged_services_html(self):

@@ -35,6 +35,10 @@
                         <field name="package_service_ids" widget="many2many_tags" readonly="1"/>
                     </group>
 
+                    <group string="Checklist Preview">
+                        <field name="merged_services_html" readonly="1"/>
+                    </group>
+
                     <group string="Assigned To">
                         <field name="washer_id"/>
                     </group>
@@ -44,8 +48,15 @@
                     </group>
 
 
-                    <group string="Checklist Preview">
-                        <field name="merged_services_html" readonly="1"/>
+                    <group string="Service Checklist">
+                        <field name="checklist_line_ids">
+                            <list editable="bottom">
+                                <field name="name" readonly="1"/>
+                                <field name="is_done"/>
+                            </list>
+                        </field>
+                        <!--                        <button name="action_regenerate_checklist" type="object" string="Regenerate Checklist"-->
+                        <!--                                class="btn-secondary"/>-->
                     </group>
 
 

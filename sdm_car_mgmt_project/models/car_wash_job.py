@@ -121,3 +121,13 @@ class CarWashJob(models.Model):
 
     def action_cancel(self):
         self.state = 'cancelled'
+
+    def action_confirm(self):
+        for job in self:
+            if not job.washer_id:
+                raise ValidationError(_("You must assign a washer before confirming the job."))
+            if not job.washer_id.exists():
+                raise ValidationError(_("The assigned washer is invalid or has been deleted."))
+
+            # Example of setting the state — adjust as needed
+            job.state = 'scheduled'

@@ -27,6 +27,7 @@
         "views/car_wash_views.xml",
         "views/service_category.xml",
         "data/email_template.xml",
+        "views/accounting.xml",
         "views/menu.xml",
     ],
 

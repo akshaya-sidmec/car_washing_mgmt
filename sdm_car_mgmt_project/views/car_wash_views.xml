@@ -12,12 +12,17 @@
             <list>
                 <field name="invoice_number"/>
                 <field name="customer_id"/>
-                <field name="vehicle_id"/>
-                <field name="license_plate_id_1"/>
+                <field name="vehicle_number"/>
+                <field name="vehicle_name"/>
+                <field name="vehicle_type"/>
+                <!--                <field name="vehicle_id"/>-->
+                <!--                <field name="license_plate_id_1"/>-->
                 <field name="branch_id"/>
-                <field name="service_id"/>
+                <!--                <field name="service_id"/>-->
+                <field name="service_ids" widget="many2many_tags"/>
                 <field name="time_slot"/>
-                <field name="amount_total"/>
+                <!--                <field name="amount_total"/>-->
+                <field name="total_price"/>
                 <field name="state"/>
             </list>
         </field>
@@ -42,10 +47,34 @@
                     <group>
                         <group string="Choose Service, Vehicle and Slot Time">
                             <field name="customer_id"/>
-                            <field name="vehicle_id"/>
-                            <field name="license_plate_id_1"/>
+
+                            <field name="vehicle_number"/>
+                            <field name="vehicle_name"/>
+                            <field name="vehicle_type"/>
+
+                            <!--                            <field name="vehicle_id"/>-->
+                            <!--                            <field name="license_plate_id_1"/>-->
                             <field name="branch_id"/>
-                            <field name="service_id"/>
+                            <!--                            <field name="service_id"/>-->
+                            <field name="service_ids" widget="many2many_tags"/>
+
+
+                            <field name="select_package"/>
+
+                            <field name="package_id"
+                                   invisible="not select_package"/>
+
+
+                            <field name="package_service_ids"
+                                   widget="many2many_tags"
+                                   readonly="1"
+                                   invisible="not select_package"/>
+
+                            <field name="package_price"
+                                   readonly="1"
+                                   invisible="not select_package"/>
+
+                            <field name="total_price"/>
                             <field name="time_slot"/>
                         </group>
 
@@ -100,6 +129,7 @@
                     <group>
                         <field name="name"/>
                         <field name="price"/>
+                        <field name="Description"/>
                     </group>
                 </sheet>
             </form>
@@ -122,7 +152,7 @@
                 <field name="customer_id"/>
                 <field name="vehicle_id"/>
                 <field name="license_plate"/>
-<!--                <field name="name"/>-->
+                <!--                <field name="name"/>-->
             </list>
         </field>
     </record>

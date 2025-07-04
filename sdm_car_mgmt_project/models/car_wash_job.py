@@ -13,11 +13,36 @@ class CarWashChecklistLine(models.Model):
 
 class CarWashJob(models.Model):
     _name = 'car.wash.job'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _description = 'Washer Job Scheduler'
+    _rec_name = "booking_id"
 
-    booking_id = fields.Many2one('car.wash.booking', required=True)
-    washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
+    booking_id = fields.Many2one('car.wash.booking', string="Booking ID", required=True)
+    washer_id = fields.Many2one('hr.employee', string="Assigned To", domain="[('category_ids.name', 'ilike', 'Supervisor')]")
     scheduled_time = fields.Datetime(required=True)
+
+    customer_id = fields.Many2one('res.partner', string="Customer")
+    vehicle_number = fields.Char(string="Vehicle Number")
+    vehicle_name = fields.Char(string="Vehicle Name")
+    vehicle_type = fields.Char(string="Vehicle Type")
+    branch_id = fields.Many2one('car.branch', string="Branch")
+    service_ids = fields.Many2many('car.wash.service', string="Services")
+    package_id = fields.Many2one('car.wash.package', string="Package")
+    package_price = fields.Float(string="Package Price")
+    package_service_ids = fields.Many2many(
+        'car.wash.service',
+        'car_wash_job_package_service_rel',  # Must be a new relation table
+        'job_id',
+        'service_id',
+        string="Included Services from Package"
+    )
+    select_package = fields.Boolean(string="Is Package?")
+    total_price = fields.Monetary(string="Total Price")
+    currency_id = fields.Many2one('res.currency', readonly=True)
+    invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
+    time_slot = fields.Datetime(string="Preferred Time Slot")
+
+
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -58,6 +83,17 @@ class CarWashJob(models.Model):
         ('4', '★★★★☆'),
         ('5', '★★★★★'),
     ], string="Customer Rating")
+    is_checked = fields.Boolean()
+
+    merged_services_html = fields.Html(string="Checklist", compute="_compute_merged_services_html")
+
+    @api.depends('service_ids', 'package_service_ids')
+    def _compute_merged_services_html(self):
+        for rec in self:
+            all_services = rec.service_ids | rec.package_service_ids
+            names = all_services.mapped('name')
+            items = "".join(f"<li><input type='checkbox'> {name}</li>" for name in names)
+            rec.merged_services_html = f"<ul>{items}</ul>"
 
     def action_set_scheduled(self):
         self.state = 'scheduled'

@@ -21,12 +21,12 @@
     "data": [
         "security/ir.model.access.csv",
         "data/email_template.xml",
+        "views/accounting.xml",
         "views/hr_employee.xml",
         "views/res_partner.xml",
         "views/car_wash_job.xml",
         "views/car_wash_views.xml",
         "views/service_category.xml",
-        "data/email_template.xml",
         "views/menu.xml",
     ],
 

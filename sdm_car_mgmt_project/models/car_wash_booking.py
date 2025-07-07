@@ -7,6 +7,7 @@ import re
 _logger = logging.getLogger(__name__)
 
 
+
 class CarWashBooking(models.Model):
     _name = 'car.wash.booking'
     _description = 'Car Wash Booking'
@@ -50,11 +51,60 @@ class CarWashBooking(models.Model):
     state = fields.Selection([
         ('draft', 'Draft'),
         ('confirmed', 'Confirmed'),
-        ('scheduled', 'Scheduled'),
     ], default='draft', string="Status")
 
     washer_id = fields.Many2one('res.users', string="Assigned Washer")
     job_id = fields.Many2one('car.wash.job', string="Scheduled Job")
+
+    invoice_id = fields.Many2one('account.move', string="Invoice")
+    invoice_status = fields.Selection([
+        ('not_paid', 'Not Paid'),
+        ('paid', 'Paid')
+    ], string="Payment Status", compute="_compute_invoice_status", store=True)
+
+    name = fields.Char(string="Booking Reference", required=True, copy=False, readonly=True, default=lambda self: _('New'))
+
+
+
+    @api.depends('invoice_id.payment_state')
+    def _compute_invoice_status(self):
+        for rec in self:
+            if rec.invoice_id:
+                rec.invoice_status = 'paid' if rec.invoice_id.payment_state == 'paid' else 'not_paid'
+            else:
+                rec.invoice_status = 'not_paid'
+
+    def action_create_invoice(self):
+        for rec in self:
+            if not rec.customer_id:
+                raise ValidationError("Customer is required.")
+            if not rec.total_price:
+                raise ValidationError("Total price must be set.")
+
+            invoice = self.env['account.move'].create({
+                'move_type': 'out_invoice',
+                'partner_id': rec.customer_id.id,
+                'invoice_origin': f"Booking #{rec.id}",
+                'invoice_line_ids': [(0, 0, {
+                    'name': f'Car Wash - {self.invoice_number or "No Ref"}',
+                    'quantity': 1,
+                    'price_unit': rec.total_price,
+                })]
+            })
+
+            # Link to booking
+            rec.invoice_id = invoice
+
+            # Also update related job, if any
+            if rec.job_id:
+                rec.job_id.invoice_number = invoice.name
+
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'account.move',
+                'view_mode': 'form',
+                'res_id': invoice.id,
+            }
 
     @api.onchange('package_id')
     def _onchange_package_id(self):
@@ -244,6 +294,7 @@ class CarWashService(models.Model):
         readonly=True
     )
     Description = fields.Text(string="Service Description")
+    product_id = fields.Many2many('product.product', string="Product", required=True)
 
 
 

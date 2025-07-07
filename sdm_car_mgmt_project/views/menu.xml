@@ -20,8 +20,8 @@
     <menuitem id="menu_car_wash_customers" name="Customers" parent="menu_car_wash_root" action="action_custom_res_partner" sequence="5"/>
     <menuitem id="menu_car_wash_management" name="Management" parent="menu_car_wash_root" sequence="6"/>
     <menuitem id="menu_car_wash_management_employees" name="Employees" parent="menu_car_wash_management" action="action_custom_hr_employee" sequence="1"/>
-    <menuitem id="menu_car_wash_management_accounts" name="Accounts" parent="menu_car_wash_management" sequence="2"/>
+    <menuitem id="menu_car_wash_management_accounts" name="Accounts" parent="menu_car_wash_management" action="account.action_move_out_invoice" sequence="2"/>
     <menuitem id="menu_car_wash_management_branches" name="Branches" parent="menu_car_wash_management" action="action_car_branch" sequence="3"/>
-    <menuitem id="menu_car_wash_management_feedback" name="Feedback" parent="menu_car_wash_management" sequence="4"/>
-
+    <menuitem id="menu_car_wash_management_feedback" name="Feedback" parent="menu_car_wash_management" sequence="5"/>
+    <menuitem id="menu_car_wash_management_product" name="Products" parent="menu_car_wash_management" action="stock.product_template_action_product" sequence="4"/>
 </odoo>

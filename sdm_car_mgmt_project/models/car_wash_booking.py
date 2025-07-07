@@ -7,7 +7,6 @@ import re
 _logger = logging.getLogger(__name__)
 
 
-
 class CarWashBooking(models.Model):
     _name = 'car.wash.booking'
     _description = 'Car Wash Booking'
@@ -62,9 +61,8 @@ class CarWashBooking(models.Model):
         ('paid', 'Paid')
     ], string="Payment Status", compute="_compute_invoice_status", store=True)
 
-    name = fields.Char(string="Booking Reference", required=True, copy=False, readonly=True, default=lambda self: _('New'))
-
-
+    name = fields.Char(string="Booking Reference", required=True, copy=False, readonly=True,
+                       default=lambda self: _('New'))
 
     @api.depends('invoice_id.payment_state')
     def _compute_invoice_status(self):
@@ -76,6 +74,15 @@ class CarWashBooking(models.Model):
 
     def action_create_invoice(self):
         for rec in self:
+            if rec.invoice_id:
+                # Invoice already exists; just open it
+                return {
+                    'type': 'ir.actions.act_window',
+                    'res_model': 'account.move',
+                    'view_mode': 'form',
+                    'res_id': rec.invoice_id.id,
+                }
+
             if not rec.customer_id:
                 raise ValidationError("Customer is required.")
             if not rec.total_price:
@@ -86,18 +93,19 @@ class CarWashBooking(models.Model):
                 'partner_id': rec.customer_id.id,
                 'invoice_origin': f"Booking #{rec.id}",
                 'invoice_line_ids': [(0, 0, {
-                    'name': f'Car Wash - {self.invoice_number or "No Ref"}',
+                    'name': f'Car Wash - {rec.invoice_number or "No Ref"}',
                     'quantity': 1,
                     'price_unit': rec.total_price,
                 })]
             })
 
-            # Link to booking
+            # Link invoice to booking
             rec.invoice_id = invoice
 
-            # Also update related job, if any
+            # Link invoice to job, if exists
             if rec.job_id:
                 rec.job_id.invoice_number = invoice.name
+                invoice.washer_job_id = rec.job_id.id
 
             return {
                 'type': 'ir.actions.act_window',
@@ -105,6 +113,38 @@ class CarWashBooking(models.Model):
                 'view_mode': 'form',
                 'res_id': invoice.id,
             }
+
+    # def action_create_invoice(self):
+    #     for rec in self:
+    #         if not rec.customer_id:
+    #             raise ValidationError("Customer is required.")
+    #         if not rec.total_price:
+    #             raise ValidationError("Total price must be set.")
+    #
+    #         invoice = self.env['account.move'].create({
+    #             'move_type': 'out_invoice',
+    #             'partner_id': rec.customer_id.id,
+    #             'invoice_origin': f"Booking #{rec.id}",
+    #             'invoice_line_ids': [(0, 0, {
+    #                 'name': f'Car Wash - {self.invoice_number or "No Ref"}',
+    #                 'quantity': 1,
+    #                 'price_unit': rec.total_price,
+    #             })]
+    #         })
+    #
+    #         # Link to booking
+    #         rec.invoice_id = invoice
+    #
+    #         # Also update related job, if any
+    #         if rec.job_id:
+    #             rec.job_id.invoice_number = invoice.name
+    #
+    #         return {
+    #             'type': 'ir.actions.act_window',
+    #             'res_model': 'account.move',
+    #             'view_mode': 'form',
+    #             'res_id': invoice.id,
+    #         }
 
     @api.onchange('package_id')
     def _onchange_package_id(self):
@@ -297,7 +337,6 @@ class CarWashService(models.Model):
     product_id = fields.Many2many('product.product', string="Product", required=True)
 
 
-
 class CarVehicle(models.Model):
     _name = 'car.vehicle'
     _description = 'Customer Vehicle'
@@ -333,7 +372,6 @@ class CarBranch(models.Model):
 
     name = fields.Char(required=True)
     address = fields.Text()
-
 
 # class CarWashJob(models.Model):
 #     _name = 'car.wash.job'

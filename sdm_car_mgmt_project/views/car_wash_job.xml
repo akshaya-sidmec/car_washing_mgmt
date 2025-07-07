@@ -115,6 +115,8 @@
 
                     <group string="Payment">
                         <button name="action_mark_paid" string="Payment" type="object" class="btn-primary"/>
+                        <field name="invoice_id" readonly="1"/>
+                        <field name="invoice_status" widget="badge" readonly="1"/>
                     </group>
                 </sheet>
             </form>

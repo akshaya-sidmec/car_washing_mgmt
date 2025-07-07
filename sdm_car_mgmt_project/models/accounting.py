@@ -17,17 +17,22 @@ class CarWashJob(models.Model):
         if not self.customer_id or not self.total_price:
             raise ValidationError(_("Missing customer or total price."))
 
-        invoice = self.env['account.move'].create({
-            'move_type': 'out_invoice',
-            'partner_id': self.customer_id.id,
-            'invoice_origin': self.booking_id.invoice_number or '/',
-            'invoice_line_ids': [(0, 0, {
-                'name': f'Car Wash - {self.booking_id.invoice_number or "No Ref"}',
-                'quantity': 1,
-                'price_unit': self.total_price,
-            })],
-        })
+        # If invoice already exists (from booking), use it
+        invoice = self.booking_id.invoice_id
+        if not invoice:
+            invoice = self.env['account.move'].create({
+                'move_type': 'out_invoice',
+                'partner_id': self.customer_id.id,
+                'invoice_origin': self.booking_id.invoice_number or '/',
+                'invoice_line_ids': [(0, 0, {
+                    'name': f'Car Wash - {self.booking_id.invoice_number or "No Ref"}',
+                    'quantity': 1,
+                    'price_unit': self.total_price,
+                })],
+            })
+            self.booking_id.invoice_id = invoice
 
+        # Set reference both ways
         invoice.washer_job_id = self.id
         self.invoice_number = invoice.name
         self.state = 'paid'
@@ -43,12 +48,44 @@ class CarWashJob(models.Model):
             'target': 'current',
         }
 
-        # return {
-        #     'type': 'ir.actions.act_window',
-        #     'res_model': 'account.move',
-        #     'view_mode': 'form',
-        #     'res_id': invoice.id,
-        # }
+    # def action_mark_paid(self):
+    #     self.ensure_one()
+    #
+    #     if not self.customer_id or not self.total_price:
+    #         raise ValidationError(_("Missing customer or total price."))
+    #
+    #     invoice = self.env['account.move'].create({
+    #         'move_type': 'out_invoice',
+    #         'partner_id': self.customer_id.id,
+    #         'invoice_origin': self.booking_id.invoice_number or '/',
+    #         'invoice_line_ids': [(0, 0, {
+    #             'name': f'Car Wash - {self.booking_id.invoice_number or "No Ref"}',
+    #             'quantity': 1,
+    #             'price_unit': self.total_price,
+    #         })],
+    #     })
+    #
+    #     invoice.washer_job_id = self.id
+    #     self.invoice_number = invoice.name
+    #     self.state = 'paid'
+    #
+    #     view_id = self.env.ref('account.view_move_form').id
+    #     return {
+    #         'name': _('Invoice'),
+    #         'type': 'ir.actions.act_window',
+    #         'res_model': 'account.move',
+    #         'res_id': invoice.id,
+    #         'view_mode': 'form',
+    #         'views': [(view_id, 'form')],
+    #         'target': 'current',
+    #     }
+
+    # return {
+    #     'type': 'ir.actions.act_window',
+    #     'res_model': 'account.move',
+    #     'view_mode': 'form',
+    #     'res_id': invoice.id,
+    # }
 
     def action_view_job_invoices(self):
         self.ensure_one()

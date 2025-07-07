@@ -33,7 +33,10 @@ class CarWashBooking(models.Model):
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id, readonly=True)
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     booking_date = fields.Datetime(string="Booking Date", default=fields.Datetime.now)
-    select_package = fields.Boolean(string="Select Package")
+    select_package = fields.Selection([
+        ('service', 'Service'),
+        ('package', 'Package')
+    ], string="Select Service option", default='service')
 
     package_id = fields.Many2one('car.wash.package', string="Package", domain="[('id', '!=', False)]")
 

@@ -102,6 +102,20 @@ class CarWashJob(models.Model):
 
     quality_checked_by = fields.Char(string="Quality Check by")
 
+    invoice_id = fields.Many2one(
+        'account.move',
+        string="Invoice",
+        related='booking_id.invoice_id',
+        store=True,
+        readonly=True
+    )
+
+    invoice_status = fields.Selection([
+        ('not_paid', 'Not Paid'),
+        ('paid', 'Paid')
+    ], string="Payment Status", related='booking_id.invoice_status', store=True, readonly=True)
+
+
     def action_regenerate_checklist(self):
         for job in self:
             job.checklist_line_ids.unlink()  # delete existing

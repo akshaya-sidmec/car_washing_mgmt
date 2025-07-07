@@ -1,44 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <!-- Car Wash Category Views -->
-    <record id="view_car_wash_category_list" model="ir.ui.view">
-        <field name="name">car.wash.category.list</field>
-        <field name="model">car.wash.category</field>
-        <field name="arch" type="xml">
-            <list>
-                <field name="name"/>
-                <field name="package_id"/>
-
-            </list>
-        </field>
-    </record>
-
-    <record id="view_car_wash_category_form" model="ir.ui.view">
-        <field name="name">car.wash.category.form</field>
-        <field name="model">car.wash.category</field>
-        <field name="arch" type="xml">
-            <form>
-                <sheet>
-                    <group>
-                        <field name="name"/>
-                        <field name="is_package" />
-                        <field name="package_id" widget="radio" invisible="is_package == False"/>
-                        <field name="package_price"  invisible="package_id == False"/>
-                        <field name="service_ids" widget="many2many_tags" invisible="package_id == False"/>
-                    </group>
-                </sheet>
-                <chatter/>
-            </form>
-        </field>
-    </record>
-
-    <record id="action_car_wash_category" model="ir.actions.act_window">
-        <field name="name">Service Categories</field>
-        <field name="res_model">car.wash.category</field>
-        <field name="view_mode">list,form</field>
-    </record>
-
-    <!-- Car Wash Package Views -->
     <record id="view_car_wash_package_list" model="ir.ui.view">
         <field name="name">car.wash.package.list</field>
         <field name="model">car.wash.package</field>
@@ -75,3 +37,6 @@
 
 
 </odoo>
+
+
+

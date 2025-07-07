@@ -10,7 +10,7 @@
                 <header>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,assigned,in_progress,work_done,quality_check,ready_to_deliver,awaiting_payment,done,delivered,cancelled"/>
-<!--                    <button name="action_schedule_job" string="Schedule" type="object"/>-->
+                    <!--                    <button name="action_schedule_job" string="Schedule" type="object"/>-->
                     <button name="action_mark_done" string="Complete Job" type="object" class="btn-primary"/>
                     <!--                    <button name="action_start_job" string="Start Job" type="object"/>-->
                     <!--                    <button name="action_upload_checklist" string="Checklist Upload" type="object"/>-->
@@ -31,6 +31,20 @@
                                 icon="fa-cube">
                             <field name="product_count" widget="statinfo" string="Products"/>
                         </button>
+                        <button name="action_open_delivery_orders"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-truck"
+                                invisible="state != 'done'">
+                            <field name="delivery_count" widget="statinfo" string="Delivery Orders"/>
+                        </button>
+                        <button name="action_open_related_invoices"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-file-text-o">
+                            <field string="Invoices" name="invoice_count" widget="statinfo"/>
+                        </button>
+
                     </div>
 
                     <group string="Booking Info" col="6">

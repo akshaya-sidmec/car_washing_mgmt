@@ -279,7 +279,7 @@ class CarWashJob(models.Model):
 
             job.state = 'done'
 
-        self.state = 'done'
+
 
     def action_cancel(self):
         self.state = 'cancelled'
@@ -303,5 +303,51 @@ class CarWashJob(models.Model):
             'res_model': 'product.template',
             'target': 'current',
         }
+
+    delivery_count = fields.Integer(string="Delivery Orders", compute="_compute_delivery_count")
+
+    def _compute_delivery_count(self):
+        for rec in self:
+            rec.delivery_count = self.env['stock.picking'].search_count([
+                ('origin', 'ilike', rec.booking_id.display_name or str(rec.id))
+            ])
+
+    def action_open_delivery_orders(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Delivery Orders',
+            'res_model': 'stock.picking',
+            'view_mode': 'list,form',
+            'domain': [('origin', 'ilike', self.booking_id.display_name or str(self.id))],
+            'target': 'current',
+        }
+
+    invoice_count = fields.Integer(string='Invoice Count', compute='_compute_invoice_count')
+
+    def _compute_invoice_count(self):
+        for record in self:
+            invoices = self.env['account.move'].search([
+                ('invoice_origin', '=', record._name),
+                ('move_type', '=', 'out_invoice')
+            ])
+            record.invoice_count = len(invoices)
+
+    def action_open_related_invoices(self):
+        self.ensure_one()
+        invoices = self.env['account.move'].search([
+            ('invoice_origin', '=', self._name),
+            ('move_type', '=', 'out_invoice')
+        ])
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Invoices',
+            'view_mode': 'list,form',
+            'res_model': 'account.move',
+            'target': 'current',
+            'domain': [('id', 'in', invoices.ids)],
+        }
+
+
 
 

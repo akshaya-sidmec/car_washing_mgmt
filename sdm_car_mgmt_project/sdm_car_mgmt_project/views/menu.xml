@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="menu_car_wash_root" name="Car Wash"/>
+    <menuitem id="menu_car_wash_management" name="Management" parent="menu_car_wash_root"/>
+<!--    <menuitem id="menu_car_wash_booking" name="Bookings" parent="menu_car_wash_management" action="action_car_wash_booking"/>-->
+<!--    <menuitem id="menu_car_wash_service" name="Services" parent="menu_car_wash_management" action="action_car_wash_service"/>-->
+<!--    <menuitem id="menu_car_vehicle" name="Vehicles" parent="menu_car_wash_management" action="action_car_vehicle"/>-->
+<!--    <menuitem id="menu_car_branch" name="Branches" parent="menu_car_wash_management" action="action_car_branch"/>-->
+<!--     <menuitem id="menu_car_wash_master_data" name="Categories" parent="menu_car_wash_root"/>-->
+<!--    <menuitem id="menu_car_wash_category" name="Service Categories" parent="menu_car_wash_master_data" action="action_car_wash_category" />-->
+<!--    <menuitem id="menu_car_wash_package" name="Service Packages" parent="menu_car_wash_master_data" action="action_car_wash_package"/>-->
+    <menuitem id="menu_car_wash_dashboard" name="Dashboard" parent="menu_car_wash_root" sequence="1"/>
+    <menuitem id="menu_car_wash_booking" name="Booking" parent="menu_car_wash_root" sequence="2"/>
+    <menuitem id="menu_car_wash_booking_appointments" name="Appointments" parent="menu_car_wash_booking" action="action_car_wash_booking" sequence="1"/>
+    <menuitem id="menu_car_wash_job" name="Jobs" parent="menu_car_wash_root" action="action_car_wash_job" sequence="3"/>
+    <menuitem id="menu_car_wash_service" name="Services" parent="menu_car_wash_root" sequence="4"/>
+<!--    <menuitem id="menu_car_wash_service_category" name="Categories" parent="menu_car_wash_service" action="action_car_wash_category" sequence="1"/>-->
+    <menuitem id="menu_car_wash_service_category" name="Services" parent="menu_car_wash_service" action="action_car_wash_service" sequence="1"/>
+    <menuitem id="menu_car_wash_service_package" name="Packages" parent="menu_car_wash_service" action="action_car_wash_package" sequence="2"/>
+    <menuitem id="menu_car_wash_customers" name="Customers" parent="menu_car_wash_root" action="action_custom_res_partner" sequence="5"/>
+    <menuitem id="menu_car_wash_management" name="Management" parent="menu_car_wash_root" sequence="6"/>
+    <menuitem id="menu_car_wash_management_employees" name="Employees" parent="menu_car_wash_management" action="action_custom_hr_employee" sequence="1"/>
+    <menuitem id="menu_car_wash_management_accounts" name="Accounts" parent="menu_car_wash_management" action="account.action_move_out_invoice" sequence="2"/>
+    <menuitem id="menu_car_wash_management_branches" name="Branches" parent="menu_car_wash_management" action="action_car_branch" sequence="3"/>
+    <menuitem id="menu_car_wash_management_feedback" name="Feedback" parent="menu_car_wash_management" sequence="5"/>
+    <menuitem id="menu_car_wash_management_product" name="Products" parent="menu_car_wash_management" action="stock.product_template_action_product" sequence="4"/>
+</odoo>

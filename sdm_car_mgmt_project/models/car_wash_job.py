@@ -38,7 +38,11 @@ class CarWashJob(models.Model):
     )
     select_package = fields.Boolean(string="Is Package?")
     total_price = fields.Monetary(string="Total Price")
-    currency_id = fields.Many2one('res.currency', readonly=True)
+    currency_id = fields.Many2one(
+        'res.currency',
+        readonly=True,
+        default=lambda self: self.env.company.currency_id
+    )
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     time_slot = fields.Datetime(string="Preferred Time Slot")
 
@@ -132,23 +136,17 @@ class CarWashJob(models.Model):
 
     @api.model
     def create(self, vals):
-        job = super(CarWashJob, self).create(vals)
+        job = super().create(vals)
+
+        # Auto-state to 'assigned' if washer_id present and in 'draft'
         if vals.get('washer_id') and job.state == 'draft':
             job.state = 'assigned'
-        return job
-
-    @api.model
-    def create(self, vals):
-        job = super().create(vals)
 
         booking = job.booking_id
 
-        # Merge all service names from both service_ids and package_service_ids
+        # Generate checklist lines from both services and package services
         all_services = booking.service_ids | booking.package_service_ids
-
-        # Create checklist lines
         checklist_lines = [(0, 0, {'name': service.name, 'is_done': False}) for service in all_services]
-
         job.checklist_line_ids = checklist_lines
 
         return job
@@ -285,16 +283,31 @@ class CarWashJob(models.Model):
         self.state = 'cancelled'
 
  ##to add product to smart button
-    product_count = fields.Integer(string="Products", compute="_compute_product_count")
+    product_count = fields.Integer(string="Products", compute="_compute_product_ids")
+    product_ids = fields.Many2many('product.template', string="Products")
 
-    def _compute_product_count(self):
+    @api.depends('service_ids', 'package_service_ids', 'state')
+    def _compute_product_ids(self):
         for rec in self:
-            rec.product_count = self.env['product.template'].search_count([])
+            if rec.state != 'done':
+                rec.product_ids = [(5, 0, 0)]  # clear
+                rec.product_count = 0
+            else:
+                products = self.env['product.template'].browse()
+                services = rec.service_ids | rec.package_service_ids
+
+                for service in services:
+                    products |= service.product_id.mapped('product_tmpl_id')
+
+                rec.product_ids = products
+                rec.product_count = len(products)
 
     def action_open_related_product_templates(self):
         self.ensure_one()
-        template_ids = self.product_ids.mapped('product_tmpl_id').ids
-
+        if self.state != 'done':
+            raise UserError("Products are visible only after the job is marked as Done.")
+        if not self.product_ids:
+            raise UserError("No product templates to display for this job.")
 
         return {
             'type': 'ir.actions.act_window',
@@ -302,6 +315,7 @@ class CarWashJob(models.Model):
             'view_mode': 'list,form',
             'res_model': 'product.template',
             'target': 'current',
+            'domain': [('id', 'in', self.product_ids.ids)],
         }
 
     delivery_count = fields.Integer(string="Delivery Orders", compute="_compute_delivery_count")
@@ -323,29 +337,33 @@ class CarWashJob(models.Model):
             'target': 'current',
         }
 
-    invoice_count = fields.Integer(string='Invoice Count', compute='_compute_invoice_count')
+    invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
+    related_invoice_ids = fields.Many2many('account.move', string="Invoices")
 
+    @api.depends('booking_id.invoice_id', 'invoice_status')
     def _compute_invoice_count(self):
-        for record in self:
-            invoices = self.env['account.move'].search([
-                ('invoice_origin', '=', record._name),
-                ('move_type', '=', 'out_invoice')
-            ])
-            record.invoice_count = len(invoices)
+        for rec in self:
+            if rec.invoice_status != 'paid' or not rec.booking_id.invoice_id:
+                rec.invoice_count = 0
+                rec.related_invoice_ids = [(5, 0, 0)]  # clear
+            else:
+                rec.related_invoice_ids = rec.booking_id.invoice_id
+                rec.invoice_count = len(rec.related_invoice_ids)
 
     def action_open_related_invoices(self):
         self.ensure_one()
-        invoices = self.env['account.move'].search([
-            ('invoice_origin', '=', self._name),
-            ('move_type', '=', 'out_invoice')
-        ])
+        if self.invoice_status != 'paid':
+            raise UserError("Invoices are visible only after payment is marked as Paid.")
+        if not self.related_invoice_ids:
+            raise UserError("No invoices found for this job.")
+
         return {
             'type': 'ir.actions.act_window',
             'name': 'Invoices',
             'view_mode': 'list,form',
             'res_model': 'account.move',
+            'domain': [('id', 'in', self.related_invoice_ids.ids)],
             'target': 'current',
-            'domain': [('id', 'in', invoices.ids)],
         }
 
 

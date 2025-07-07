@@ -12,6 +12,16 @@
                            statusbar_visible="draft,assigned,in_progress,work_done,quality_check,ready_to_deliver,awaiting_payment,done,delivered,cancelled"/>
                     <!--                    <button name="action_schedule_job" string="Schedule" type="object"/>-->
                     <button name="action_mark_done" string="Complete Job" type="object" class="btn-primary"/>
+                    <!--                    <button name="action_mark_done" string="Complete Job" type="object" class="btn-primary" invisible="state != 'paid'"/>-->
+                    <button name="action_start_job" string="Began Work" type="object" class="btn-info"
+                            invisible="state != 'assigned'"/>
+                    <button name="action_confirm_work_done" string="Confirm Work Done" type="object"
+                            class="btn-primary" invisible="state != 'in_progress'"/>
+                    <button name="action_quality_check" string="Quality Check" type="object"
+                            class="btn btn-info" invisible="state != 'work_done'"/>
+                    <button name="action_ready_to_deliver" string="Ready to Deliver" type="object"
+                            class="btn-primary" invisible="state != 'quality_check'"/>
+
                     <!--                    <button name="action_start_job" string="Start Job" type="object"/>-->
                     <!--                    <button name="action_upload_checklist" string="Checklist Upload" type="object"/>-->
                     <!--                    <button name="action_supervisor_review" string="Send to Supervisor" type="object"/>-->
@@ -28,7 +38,8 @@
                         <button name="action_open_related_product_templates"
                                 type="object"
                                 class="oe_stat_button"
-                                icon="fa-cube">
+                                icon="fa-cube"
+                                invisible="state != 'done'">
                             <field name="product_count" widget="statinfo" string="Products"/>
                         </button>
                         <button name="action_open_delivery_orders"
@@ -41,7 +52,8 @@
                         <button name="action_open_related_invoices"
                                 type="object"
                                 class="oe_stat_button"
-                                icon="fa-file-text-o">
+                                icon="fa-file-text-o"
+                                invisible="state != 'paid'">
                             <field string="Invoices" name="invoice_count" widget="statinfo"/>
                         </button>
 
@@ -69,8 +81,7 @@
                     <group string="Assigned To">
                         <field name="washer_id" options="{'no_create': True, 'no_create_edit': True}"/>
                         <!--                        <field name="action_start_job"/>-->
-                        <button name="action_start_job" string="Began Work" type="object" class="btn-secondary"
-                                invisible="state != 'assigned'"/>
+
                     </group>
 
                     <!--                    <group string="Current Job Status">-->
@@ -87,8 +98,7 @@
                         </field>
                         <!--                        <button name="action_regenerate_checklist" type="object" string="Regenerate Checklist"-->
                         <!--                                class="btn-secondary"/>-->
-                        <button name="action_confirm_work_done" string="Confirm Work Done" type="object"
-                                class="btn-primary" invisible="state != 'in_progress'"/>
+
                     </group>
 
 
@@ -108,14 +118,11 @@
 
 
                     <group string="Quality Check">
-                        <button name="action_quality_check" string="Quality Check" type="object"
-                                class="btn-secondary" invisible="state != 'work_done'"/>
                         <field name="quality_checked_by" readonly="1"/>
                     </group>
 
                     <group string="">
-                        <button name="action_ready_to_deliver" string="Ready to Deliver" type="object"
-                                class="btn-primary" invisible="state != 'quality_check'"/>
+
                     </group>
 
                     <!--                    <group string="Customer Rating">-->

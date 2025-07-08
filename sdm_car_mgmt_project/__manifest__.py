@@ -27,6 +27,7 @@
         "views/car_wash_job.xml",
         "views/car_wash_views.xml",
         "views/service_category.xml",
+        "security/security.xml",
         "views/menu.xml",
     ],
 

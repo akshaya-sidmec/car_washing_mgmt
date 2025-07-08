@@ -9,9 +9,30 @@
             <form string="Washer Job" create="0">
                 <header>
                     <field name="state" widget="statusbar"
-                           statusbar_visible="draft,assigned,in_progress,work_done,quality_check,ready_to_deliver,awaiting_payment,done,delivered,cancelled"/>
-<!--                    <button name="action_schedule_job" string="Schedule" type="object"/>-->
-                    <button name="action_mark_done" string="Complete Job" type="object" class="btn-primary"/>
+                           statusbar_visible="draft,assigned,in_progress,work_done,quality_check,ready_to_deliver,awaiting_payment,paid,done,delivered,cancelled"/>
+                    <!--                    <button name="action_schedule_job" string="Schedule" type="object"/>-->
+                    <!--                    <button name="action_mark_done" string="Service Completed" type="object" class="btn-primary"-->
+                    <!--                            icon="fa-print"/>-->
+                    <button name="action_mark_done"
+                            string="Service Completed"
+                            type="object"
+                            class="btn-success"
+                            icon="fa-check-circle"
+                            invisible="state != 'paid'"/>
+                    <button name="action_mark_delivered"
+                            string="Delivered"
+                            type="object"
+                            class="btn-success"
+                            icon="fa-truck"
+                            invisible="state != 'done'"
+                    />
+                    <button name="action_cancel"
+                            string="Cancelled"
+                            type="object"
+                            class="btn-danger"
+                            icon="fa-times"
+                    />
+
                     <!--                    <button name="action_start_job" string="Start Job" type="object"/>-->
                     <!--                    <button name="action_upload_checklist" string="Checklist Upload" type="object"/>-->
                     <!--                    <button name="action_supervisor_review" string="Send to Supervisor" type="object"/>-->

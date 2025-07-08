@@ -50,9 +50,9 @@ class CarWashJob(models.Model):
         ('work_done', 'Work Done'),
         ('quality_check', 'Quality Check'),
         ('ready_to_deliver', 'Ready to Deliver'),
-        ('awaiting_payment', 'Awaiting Payment'),
+        ('awaiting_payment', 'Payment verification'),
         ('paid', 'Paid'),
-        ('done', 'Done'),
+        ('done', 'Service Completed'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ], string="Job Status", default='draft', tracking=True)
@@ -283,6 +283,10 @@ class CarWashJob(models.Model):
 
     def action_cancel(self):
         self.state = 'cancelled'
+
+    def action_mark_delivered(self):
+        for rec in self:
+            rec.state = 'delivered'
 
  ##to add product to smart button
     product_count = fields.Integer(string="Products", compute="_compute_product_count")

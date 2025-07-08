@@ -352,10 +352,10 @@ class CarWashJob(models.Model):
 
     def action_open_related_invoices(self):
         self.ensure_one()
-        if self.invoice_status != 'paid':
-            raise UserError("Invoices are visible only after payment is marked as Paid.")
-        if not self.related_invoice_ids:
-            raise UserError("No invoices found for this job.")
+        # if self.invoice_status != 'paid':
+        #     raise UserError("Invoices are visible only after payment is marked as Paid.")
+        # if not self.related_invoice_ids:
+        #     raise UserError("No invoices found for this job.")
 
         return {
             'type': 'ir.actions.act_window',

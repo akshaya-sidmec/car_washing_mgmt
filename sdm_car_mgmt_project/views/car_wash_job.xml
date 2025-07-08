@@ -21,6 +21,8 @@
                             class="btn btn-info" invisible="state != 'work_done'"/>
                     <button name="action_ready_to_deliver" string="Ready to Deliver" type="object"
                             class="btn-primary" invisible="state != 'quality_check'"/>
+<!--                      <button name="action_cancel" string="Cancel" type="object"-->
+<!--                            class="btn-danger" invisible="state != 'done'"/>-->
 
                     <!--                    <button name="action_start_job" string="Start Job" type="object"/>-->
                     <!--                    <button name="action_upload_checklist" string="Checklist Upload" type="object"/>-->

@@ -38,7 +38,11 @@ class CarWashJob(models.Model):
     )
     select_package = fields.Boolean(string="Is Package?")
     total_price = fields.Monetary(string="Total Price")
-    currency_id = fields.Many2one('res.currency', readonly=True)
+    currency_id = fields.Many2one(
+        'res.currency',
+        readonly=True,
+        default=lambda self: self.env.company.currency_id
+    )
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     time_slot = fields.Datetime(string="Preferred Time Slot")
 
@@ -132,23 +136,17 @@ class CarWashJob(models.Model):
 
     @api.model
     def create(self, vals):
-        job = super(CarWashJob, self).create(vals)
+        job = super().create(vals)
+
+        # Auto-state to 'assigned' if washer_id present and in 'draft'
         if vals.get('washer_id') and job.state == 'draft':
             job.state = 'assigned'
-        return job
-
-    @api.model
-    def create(self, vals):
-        job = super().create(vals)
 
         booking = job.booking_id
 
-        # Merge all service names from both service_ids and package_service_ids
+        # Generate checklist lines from both services and package services
         all_services = booking.service_ids | booking.package_service_ids
-
-        # Create checklist lines
         checklist_lines = [(0, 0, {'name': service.name, 'is_done': False}) for service in all_services]
-
         job.checklist_line_ids = checklist_lines
 
         return job
@@ -157,80 +155,30 @@ class CarWashJob(models.Model):
 
     package_ids = fields.Many2many('car.wash.package', string="Packages")
 
-    def action_complete_job(self):
-        StockPicking = self.env['stock.picking']
-        StockMove = self.env['stock.move']
-        picking_type = self.env['stock.picking.type'].search([('code', '=', 'outgoing')], limit=1)
-
-        stock_location = self.env.ref('stock.stock_location_stock')
-        customer_location = self.env.ref('stock.stock_location_customers')
-
-        for job in self:
-            if job.state != 'assigned':
-                raise UserError(_("You can only complete jobs that are in the 'assigned' state."))
-
-            # Create the picking
-            picking = StockPicking.create({
-                'picking_type_id': picking_type.id,
-                'location_id': stock_location.id,
-                'location_dest_id': customer_location.id,
-                'origin': f'Car Wash Job {job.booking_id.display_name or job.id}',
-            })
-
-            # Use a set to avoid duplicate moves
-            product_ids = set()
-            services = job.service_ids | job.package_service_ids
-
-            for service in services:
-                products = service.product_id  # now Many2many
-                if not products:
-                    continue
-                for product in products:
-                    if product.id in product_ids:
-                        continue
-                    product_ids.add(product.id)
-
-                    StockMove.create({
-                        'name': product.display_name,
-                        'product_id': product.id,
-                        'product_uom_qty': 1,
-                        'product_uom': product.uom_id.id,
-                        'location_id': stock_location.id,
-                        'location_dest_id': customer_location.id,
-                        'picking_id': picking.id,
-                    })
-
-            if not picking.move_ids:
-                raise UserError("No consumable products found in the selected services or packages for this job.")
-
-            picking.action_confirm()
-            picking.action_assign()
-            picking.button_validate()
-
-            job.state = 'done'
 
 
-    def action_schedule_job(self):
-        for job in self:
-            # Use a set to avoid duplicates
-            product_ids = set()
-            services = job.service_ids | job.package_service_ids
 
-            for service in services:
-                product = service.product_id
-                if not product or product.id in product_ids:
-                    continue
-                product_ids.add(product.id)
-
-                available_qty = product.qty_available - product.outgoing_qty
-
-                if available_qty <= 0:
-                    raise ValidationError(
-                        _(f"Cannot schedule job: '{product.display_name}' has no available stock.")
-                    )
-
-            # If all products have sufficient stock, schedule the job
-            job.state = 'assigned'
+    # def action_schedule_job(self):
+    #     for job in self:
+    #         # Use a set to avoid duplicates
+    #         product_ids = set()
+    #         services = job.service_ids | job.package_service_ids
+    #
+    #         for service in services:
+    #             product = service.product_id
+    #             if not product or product.id in product_ids:
+    #                 continue
+    #             product_ids.add(product.id)
+    #
+    #             available_qty = product.qty_available - product.outgoing_qty
+    #
+    #             if available_qty <= 0:
+    #                 raise ValidationError(
+    #                     _(f"Cannot schedule job: '{product.display_name}' has no available stock.")
+    #                 )
+    #
+    #         # If all products have sufficient stock, schedule the job
+    #         job.state = 'assigned'
 
     @api.depends('service_ids', 'package_service_ids')
     def _compute_merged_services_html(self):
@@ -280,22 +228,86 @@ class CarWashJob(models.Model):
         self.state = 'paid'
 
     def action_mark_done(self):
-        self.state = 'done'
+        StockPicking = self.env['stock.picking']
+        StockMove = self.env['stock.move']
+        picking_type = self.env['stock.picking.type'].search([('code', '=', 'outgoing')], limit=1)
+
+        stock_location = self.env.ref('stock.stock_location_stock')
+        customer_location = self.env.ref('stock.stock_location_customers')
+
+        for job in self:
+
+            # Create the picking
+            picking = StockPicking.create({
+                'picking_type_id': picking_type.id,
+                'location_id': stock_location.id,
+                'location_dest_id': customer_location.id,
+                'origin': f'Car Wash Job {job.booking_id.display_name or job.id}',
+            })
+
+            # Use a set to avoid duplicate moves
+            product_ids = set()
+            services = job.service_ids | job.package_service_ids
+
+            for service in services:
+                products = service.product_id  # now Many2many
+                if not products:
+                    continue
+                for product in products:
+                    if product.id in product_ids:
+                        continue
+                    product_ids.add(product.id)
+
+                    StockMove.create({
+                        'name': product.display_name,
+                        'product_id': product.id,
+                        'product_uom_qty': 1,
+                        'product_uom': product.uom_id.id,
+                        'location_id': stock_location.id,
+                        'location_dest_id': customer_location.id,
+                        'picking_id': picking.id,
+                    })
+
+            if not picking.move_ids:
+                raise UserError("No consumable products found in the selected services or packages for this job.")
+
+            picking.action_confirm()
+            picking.action_assign()
+            picking.button_validate()
+
+            job.state = 'done'
+
+
 
     def action_cancel(self):
         self.state = 'cancelled'
 
  ##to add product to smart button
-    product_count = fields.Integer(string="Products", compute="_compute_product_count")
+    product_count = fields.Integer(string="Products", compute="_compute_product_ids")
+    product_ids = fields.Many2many('product.template', string="Products")
 
-    def _compute_product_count(self):
+    @api.depends('service_ids', 'package_service_ids', 'state')
+    def _compute_product_ids(self):
         for rec in self:
-            rec.product_count = self.env['product.template'].search_count([])
+            if rec.state != 'done':
+                rec.product_ids = [(5, 0, 0)]  # clear
+                rec.product_count = 0
+            else:
+                products = self.env['product.template'].browse()
+                services = rec.service_ids | rec.package_service_ids
+
+                for service in services:
+                    products |= service.product_id.mapped('product_tmpl_id')
+
+                rec.product_ids = products
+                rec.product_count = len(products)
 
     def action_open_related_product_templates(self):
         self.ensure_one()
-        template_ids = self.product_ids.mapped('product_tmpl_id').ids
-
+        if self.state != 'done':
+            raise UserError("Products are visible only after the job is marked as Done.")
+        if not self.product_ids:
+            raise UserError("No product templates to display for this job.")
 
         return {
             'type': 'ir.actions.act_window',
@@ -303,6 +315,57 @@ class CarWashJob(models.Model):
             'view_mode': 'list,form',
             'res_model': 'product.template',
             'target': 'current',
+            'domain': [('id', 'in', self.product_ids.ids)],
         }
+
+    delivery_count = fields.Integer(string="Delivery Orders", compute="_compute_delivery_count")
+
+    def _compute_delivery_count(self):
+        for rec in self:
+            rec.delivery_count = self.env['stock.picking'].search_count([
+                ('origin', 'ilike', rec.booking_id.display_name or str(rec.id))
+            ])
+
+    def action_open_delivery_orders(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Delivery Orders',
+            'res_model': 'stock.picking',
+            'view_mode': 'list,form',
+            'domain': [('origin', 'ilike', self.booking_id.display_name or str(self.id))],
+            'target': 'current',
+        }
+
+    invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
+    related_invoice_ids = fields.Many2many('account.move', string="Invoices")
+
+    @api.depends('booking_id.invoice_id', 'invoice_status')
+    def _compute_invoice_count(self):
+        for rec in self:
+            if rec.invoice_status != 'paid' or not rec.booking_id.invoice_id:
+                rec.invoice_count = 0
+                rec.related_invoice_ids = [(5, 0, 0)]  # clear
+            else:
+                rec.related_invoice_ids = rec.booking_id.invoice_id
+                rec.invoice_count = len(rec.related_invoice_ids)
+
+    def action_open_related_invoices(self):
+        self.ensure_one()
+        # if self.invoice_status != 'paid':
+        #     raise UserError("Invoices are visible only after payment is marked as Paid.")
+        # if not self.related_invoice_ids:
+        #     raise UserError("No invoices found for this job.")
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Invoices',
+            'view_mode': 'list,form',
+            'res_model': 'account.move',
+            'domain': [('id', 'in', self.related_invoice_ids.ids)],
+            'target': 'current',
+        }
+
+
 
 

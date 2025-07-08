@@ -33,7 +33,10 @@ class CarWashBooking(models.Model):
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id, readonly=True)
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     booking_date = fields.Datetime(string="Booking Date", default=fields.Datetime.now)
-    select_package = fields.Boolean(string="Select Package")
+    select_package = fields.Selection([
+        ('service', 'Service'),
+        ('package', 'Package')
+    ], string="Select Service option", default='service')
 
     package_id = fields.Many2one('car.wash.package', string="Package", domain="[('id', '!=', False)]")
 
@@ -54,6 +57,12 @@ class CarWashBooking(models.Model):
 
     washer_id = fields.Many2one('res.users', string="Assigned Washer")
     job_id = fields.Many2one('car.wash.job', string="Scheduled Job")
+    job_status = fields.Selection(
+        related='job_id.state',
+        string='Job Status',
+        store=True,
+        readonly=True
+    )
 
     invoice_id = fields.Many2one('account.move', string="Invoice")
     invoice_status = fields.Selection([
@@ -85,18 +94,24 @@ class CarWashBooking(models.Model):
 
             if not rec.customer_id:
                 raise ValidationError("Customer is required.")
-            if not rec.total_price:
-                raise ValidationError("Total price must be set.")
+
+            all_services = rec.service_ids | rec.package_service_ids
+            if not all_services:
+                raise ValidationError("No services selected for this booking.")
+
+            invoice_lines = []
+            for service in all_services:
+                invoice_lines.append((0, 0, {
+                    'name': service.name,
+                    'quantity': 1,
+                    'price_unit': service.price,
+                }))
 
             invoice = self.env['account.move'].create({
                 'move_type': 'out_invoice',
                 'partner_id': rec.customer_id.id,
                 'invoice_origin': f"Booking #{rec.id}",
-                'invoice_line_ids': [(0, 0, {
-                    'name': f'Car Wash - {rec.invoice_number or "No Ref"}',
-                    'quantity': 1,
-                    'price_unit': rec.total_price,
-                })]
+                'invoice_line_ids': invoice_lines
             })
 
             # Link invoice to booking

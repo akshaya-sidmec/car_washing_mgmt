@@ -57,25 +57,25 @@
                             <!--                            <field name="license_plate_id_1"/>-->
                             <field name="branch_id"/>
                             <!--                            <field name="service_id"/>-->
-                            <field name="service_ids" widget="many2many_tags"/>
+                            <field name="select_package" widget="radio"/>
+                            <field name="service_ids" widget="many2many_tags" invisible="select_package != 'service'"/>
 
 
-                            <field name="select_package"/>
 
                             <field name="package_id"
-                                   invisible="not select_package"/>
+                                      invisible="select_package != 'package'"/>
 
 
                             <field name="package_service_ids"
                                    widget="many2many_tags"
                                    readonly="1"
-                                   invisible="not select_package"/>
+                                   invisible="select_package != 'package'"/>
 
                             <field name="package_price"
                                    readonly="1"
-                                   invisible="not select_package"/>
+                                   invisible="select_package != 'package'"/>
 
-                            <field name="total_price"/>
+                            <field name="total_price" invisible="select_package != 'service'"/>
                             <field name="time_slot"/>
                             <button name="action_create_invoice" string="Create Invoice" type="object"
                                     class="btn-primary"/>

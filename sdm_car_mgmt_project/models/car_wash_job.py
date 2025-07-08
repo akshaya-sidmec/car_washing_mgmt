@@ -50,9 +50,9 @@ class CarWashJob(models.Model):
         ('work_done', 'Work Done'),
         ('quality_check', 'Quality Check'),
         ('ready_to_deliver', 'Ready to Deliver'),
-        ('awaiting_payment', 'Awaiting Payment'),
+        ('awaiting_payment', 'Payment verification'),
         ('paid', 'Paid'),
-        ('done', 'Done'),
+        ('done', 'Service Completed'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ], string="Job Status", default='draft', tracking=True)
@@ -157,80 +157,30 @@ class CarWashJob(models.Model):
 
     package_ids = fields.Many2many('car.wash.package', string="Packages")
 
-    def action_complete_job(self):
-        StockPicking = self.env['stock.picking']
-        StockMove = self.env['stock.move']
-        picking_type = self.env['stock.picking.type'].search([('code', '=', 'outgoing')], limit=1)
-
-        stock_location = self.env.ref('stock.stock_location_stock')
-        customer_location = self.env.ref('stock.stock_location_customers')
-
-        for job in self:
-            if job.state != 'assigned':
-                raise UserError(_("You can only complete jobs that are in the 'assigned' state."))
-
-            # Create the picking
-            picking = StockPicking.create({
-                'picking_type_id': picking_type.id,
-                'location_id': stock_location.id,
-                'location_dest_id': customer_location.id,
-                'origin': f'Car Wash Job {job.booking_id.display_name or job.id}',
-            })
-
-            # Use a set to avoid duplicate moves
-            product_ids = set()
-            services = job.service_ids | job.package_service_ids
-
-            for service in services:
-                products = service.product_id  # now Many2many
-                if not products:
-                    continue
-                for product in products:
-                    if product.id in product_ids:
-                        continue
-                    product_ids.add(product.id)
-
-                    StockMove.create({
-                        'name': product.display_name,
-                        'product_id': product.id,
-                        'product_uom_qty': 1,
-                        'product_uom': product.uom_id.id,
-                        'location_id': stock_location.id,
-                        'location_dest_id': customer_location.id,
-                        'picking_id': picking.id,
-                    })
-
-            if not picking.move_ids:
-                raise UserError("No consumable products found in the selected services or packages for this job.")
-
-            picking.action_confirm()
-            picking.action_assign()
-            picking.button_validate()
-
-            job.state = 'done'
 
 
-    def action_schedule_job(self):
-        for job in self:
-            # Use a set to avoid duplicates
-            product_ids = set()
-            services = job.service_ids | job.package_service_ids
 
-            for service in services:
-                product = service.product_id
-                if not product or product.id in product_ids:
-                    continue
-                product_ids.add(product.id)
-
-                available_qty = product.qty_available - product.outgoing_qty
-
-                if available_qty <= 0:
-                    raise ValidationError(
-                        _(f"Cannot schedule job: '{product.display_name}' has no available stock.")
-                    )
-
-            # If all products have sufficient stock, schedule the job
-            job.state = 'assigned'
+    # def action_schedule_job(self):
+    #     for job in self:
+    #         # Use a set to avoid duplicates
+    #         product_ids = set()
+    #         services = job.service_ids | job.package_service_ids
+    #
+    #         for service in services:
+    #             product = service.product_id
+    #             if not product or product.id in product_ids:
+    #                 continue
+    #             product_ids.add(product.id)
+    #
+    #             available_qty = product.qty_available - product.outgoing_qty
+    #
+    #             if available_qty <= 0:
+    #                 raise ValidationError(
+    #                     _(f"Cannot schedule job: '{product.display_name}' has no available stock.")
+    #                 )
+    #
+    #         # If all products have sufficient stock, schedule the job
+    #         job.state = 'assigned'
 
     @api.depends('service_ids', 'package_service_ids')
     def _compute_merged_services_html(self):
@@ -280,10 +230,63 @@ class CarWashJob(models.Model):
         self.state = 'paid'
 
     def action_mark_done(self):
+        StockPicking = self.env['stock.picking']
+        StockMove = self.env['stock.move']
+        picking_type = self.env['stock.picking.type'].search([('code', '=', 'outgoing')], limit=1)
+
+        stock_location = self.env.ref('stock.stock_location_stock')
+        customer_location = self.env.ref('stock.stock_location_customers')
+
+        for job in self:
+
+            # Create the picking
+            picking = StockPicking.create({
+                'picking_type_id': picking_type.id,
+                'location_id': stock_location.id,
+                'location_dest_id': customer_location.id,
+                'origin': f'Car Wash Job {job.booking_id.display_name or job.id}',
+            })
+
+            # Use a set to avoid duplicate moves
+            product_ids = set()
+            services = job.service_ids | job.package_service_ids
+
+            for service in services:
+                products = service.product_id  # now Many2many
+                if not products:
+                    continue
+                for product in products:
+                    if product.id in product_ids:
+                        continue
+                    product_ids.add(product.id)
+
+                    StockMove.create({
+                        'name': product.display_name,
+                        'product_id': product.id,
+                        'product_uom_qty': 1,
+                        'product_uom': product.uom_id.id,
+                        'location_id': stock_location.id,
+                        'location_dest_id': customer_location.id,
+                        'picking_id': picking.id,
+                    })
+
+            if not picking.move_ids:
+                raise UserError("No consumable products found in the selected services or packages for this job.")
+
+            picking.action_confirm()
+            picking.action_assign()
+            picking.button_validate()
+
+            job.state = 'done'
+
         self.state = 'done'
 
     def action_cancel(self):
         self.state = 'cancelled'
+
+    def action_mark_delivered(self):
+        for rec in self:
+            rec.state = 'delivered'
 
  ##to add product to smart button
     product_count = fields.Integer(string="Products", compute="_compute_product_count")

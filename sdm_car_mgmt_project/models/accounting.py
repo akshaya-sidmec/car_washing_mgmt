@@ -20,15 +20,23 @@ class CarWashJob(models.Model):
         # If invoice already exists (from booking), use it
         invoice = self.booking_id.invoice_id
         if not invoice:
+            all_services = self.service_ids | self.package_service_ids
+            if not all_services:
+                raise ValidationError(_("No services selected for this job."))
+
+            invoice_lines = []
+            for service in all_services:
+                invoice_lines.append((0, 0, {
+                    'name': service.name,
+                    'quantity': 1,
+                    'price_unit': service.price,
+                }))
+
             invoice = self.env['account.move'].create({
                 'move_type': 'out_invoice',
                 'partner_id': self.customer_id.id,
                 'invoice_origin': self.booking_id.invoice_number or '/',
-                'invoice_line_ids': [(0, 0, {
-                    'name': f'Car Wash - {self.booking_id.invoice_number or "No Ref"}',
-                    'quantity': 1,
-                    'price_unit': self.total_price,
-                })],
+                'invoice_line_ids': invoice_lines,
             })
             self.booking_id.invoice_id = invoice
 

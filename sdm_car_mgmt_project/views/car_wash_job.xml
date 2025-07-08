@@ -57,7 +57,7 @@
                                 type="object"
                                 class="oe_stat_button"
                                 icon="fa-truck"
-                                invisible="state != 'done'">
+                                invisible="state != 'delivered'">
                             <field name="delivery_count" widget="statinfo" string="Delivery Orders"/>
                         </button>
                         <button name="action_open_related_invoices"

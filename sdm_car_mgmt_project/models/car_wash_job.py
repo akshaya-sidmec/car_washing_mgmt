@@ -157,29 +157,6 @@ class CarWashJob(models.Model):
 
 
 
-
-    # def action_schedule_job(self):
-    #     for job in self:
-    #         # Use a set to avoid duplicates
-    #         product_ids = set()
-    #         services = job.service_ids | job.package_service_ids
-    #
-    #         for service in services:
-    #             product = service.product_id
-    #             if not product or product.id in product_ids:
-    #                 continue
-    #             product_ids.add(product.id)
-    #
-    #             available_qty = product.qty_available - product.outgoing_qty
-    #
-    #             if available_qty <= 0:
-    #                 raise ValidationError(
-    #                     _(f"Cannot schedule job: '{product.display_name}' has no available stock.")
-    #                 )
-    #
-    #         # If all products have sufficient stock, schedule the job
-    #         job.state = 'assigned'
-
     @api.depends('service_ids', 'package_service_ids')
     def _compute_merged_services_html(self):
         for rec in self:

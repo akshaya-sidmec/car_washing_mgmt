@@ -252,6 +252,7 @@ class CarWashJob(models.Model):
             picking.action_assign()
             picking.button_validate()
 
+
             job.state = 'done'
 
 

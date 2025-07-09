@@ -73,6 +73,13 @@ class CarWashBooking(models.Model):
     name = fields.Char(string="Booking Reference", required=True, copy=False, readonly=True,
                        default=lambda self: _('New'))
 
+    job_status = fields.Selection(
+        related='job_id.state',
+        string='Job Status',
+        store=True,
+        readonly=True
+    )
+
     @api.depends('invoice_id.payment_state')
     def _compute_invoice_status(self):
         for rec in self:
@@ -388,10 +395,4 @@ class CarBranch(models.Model):
     name = fields.Char(required=True)
     address = fields.Text()
 
-# class CarWashJob(models.Model):
-#     _name = 'car.wash.job'
-#     _description = 'Washer Job Scheduler'
-#
-#     booking_id = fields.Many2one('car.wash.booking', required=True)
-#     washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
-#     scheduled_time = fields.Datetime(required=True)
+

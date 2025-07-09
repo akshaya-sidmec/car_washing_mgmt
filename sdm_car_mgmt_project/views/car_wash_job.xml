@@ -5,6 +5,7 @@
     <record id="view_car_wash_job_form" model="ir.ui.view">
         <field name="name">car.wash.job.form</field>
         <field name="model">car.wash.job</field>
+<!--        <field name="groups_id" eval="[(4, ref('sdm_car_mgmt_project.group_carwash_supervisor'))]"/>-->
         <field name="arch" type="xml">
             <form string="Washer Job" create="0">
                 <header>
@@ -85,8 +86,11 @@
                         <field name="package_service_ids" widget="many2many_tags" readonly="1"/>
                     </group>
 
-                    <group string="Checklist Preview">
-                        <field name="merged_services_html" readonly="1"/>
+                    <group string="Checklist Preview"
+                        invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
+
+                        <field name="merged_services_html" readonly="1"
+                        />
                     </group>
 
                     <group string="Assigned To">
@@ -136,7 +140,7 @@
                         <field name="quality_checked_by" readonly="1"/>
                     </group>
 
-                    <group string="">
+                    <group string=""  invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
                         <button name="action_ready_to_deliver" string="Ready to Deliver" type="object"
                                 class="btn-primary" invisible="state != 'quality_check'"/>
                     </group>
@@ -150,7 +154,7 @@
                         <field name="after_photos" widget="many2many_binary"/>
                     </group>
 
-                    <group string="Payment">
+                    <group string="Payment"  invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
                         <button name="action_mark_paid" string="Payment" type="object" class="btn-primary"/>
                         <field name="invoice_id" readonly="1"/>
                         <field name="invoice_status" widget="badge" readonly="1"/>

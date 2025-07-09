@@ -9,3 +9,4 @@ access_hr_employee,access_hr_employee,model_hr_employee,,1,1,1,1
 access_res_partner,access_res_partner,model_res_partner,,1,1,1,1
 access_car_wash_checklist_line,access_car_wash_checklist_line,model_car_wash_checklist_line,,1,1,1,1
 access_account_move,access_account_move,model_account_move,,1,1,1,1
+access_car_wash_job_supervisor,access_car_wash_job_supervisor,model_car_wash_job,sdm_car_mgmt_project.group_carwash_supervisor,1,0,0,0

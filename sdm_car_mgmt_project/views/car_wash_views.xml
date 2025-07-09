@@ -81,6 +81,8 @@
                                     class="btn-primary"/>
                             <field name="invoice_id" readonly="1"/>
                             <field name="invoice_status" readonly="1" widget="badge"/>
+                            <field name="job_status" readonly="1" widget="badge"/>
+
                         </group>
 
                         <group string="Apply Promo code">

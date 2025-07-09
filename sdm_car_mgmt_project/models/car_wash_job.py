@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError,UserError
+from odoo.exceptions import ValidationError, UserError
 
 
 class CarWashChecklistLine(models.Model):
@@ -18,7 +18,8 @@ class CarWashJob(models.Model):
     _rec_name = "booking_id"
 
     booking_id = fields.Many2one('car.wash.booking', string="Booking ID", required=True)
-    washer_id = fields.Many2one('hr.employee', string="Assigned To", domain="[('category_ids.name', 'ilike', 'Supervisor')]")
+    washer_id = fields.Many2one('hr.employee', string="Assigned To",
+                                domain="[('category_ids.name', 'ilike', 'Supervisor')]")
     scheduled_time = fields.Datetime(required=True)
 
     customer_id = fields.Many2one('res.partner', string="Customer")
@@ -41,7 +42,6 @@ class CarWashJob(models.Model):
     currency_id = fields.Many2one('res.currency', readonly=True)
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     time_slot = fields.Datetime(string="Preferred Time Slot")
-
 
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -115,6 +115,25 @@ class CarWashJob(models.Model):
         ('paid', 'Paid')
     ], string="Payment Status", related='booking_id.invoice_status', store=True, readonly=True)
 
+    invoice_count = fields.Integer(string="Invoices", compute="_compute_invoice_count")
+    related_invoice_ids = fields.Many2many('account.move', string="Invoices")
+    delivery_count = fields.Integer(string="Delivery Orders", compute="_compute_delivery_count")
+
+    @api.depends('booking_id.invoice_id', 'invoice_status')
+    def _compute_invoice_count(self):
+        for rec in self:
+            if rec.invoice_status != 'paid' or not rec.booking_id.invoice_id:
+                rec.invoice_count = 0
+                rec.related_invoice_ids = [(5, 0, 0)]  # clear
+            else:
+                rec.related_invoice_ids = rec.booking_id.invoice_id
+                rec.invoice_count = len(rec.related_invoice_ids)
+
+    def _compute_delivery_count(self):
+        for rec in self:
+            rec.delivery_count = self.env['stock.picking'].search_count([
+                ('origin', 'ilike', rec.booking_id.display_name or str(rec.id))
+            ])
 
     def action_regenerate_checklist(self):
         for job in self:
@@ -156,9 +175,6 @@ class CarWashJob(models.Model):
     product_ids = fields.Many2many('product.product', string='Products')
 
     package_ids = fields.Many2many('car.wash.package', string="Packages")
-
-
-
 
     # def action_schedule_job(self):
     #     for job in self:
@@ -206,7 +222,6 @@ class CarWashJob(models.Model):
     def action_ready_to_deliver(self):
         self.ensure_one()
         self.state = 'ready_to_deliver'
-
 
     # def action_set_scheduled(self):
     #     self.state = 'scheduled'
@@ -288,8 +303,25 @@ class CarWashJob(models.Model):
         for rec in self:
             rec.state = 'delivered'
 
- ##to add product to smart button
-    product_count = fields.Integer(string="Products", compute="_compute_product_count")
+    ##to add product to smart button
+    product_count = fields.Integer(string="Products", compute="_compute_product_ids")
+    product_ids = fields.Many2many('product.template', string="Products")
+
+    @api.depends('service_ids', 'package_service_ids', 'state')
+    def _compute_product_ids(self):
+        for rec in self:
+            if rec.state != 'done':
+                rec.product_ids = [(5, 0, 0)]  # clear
+                rec.product_count = 0
+            else:
+                products = self.env['product.template'].browse()
+                services = rec.service_ids | rec.package_service_ids
+
+                for service in services:
+                    products |= service.product_id.mapped('product_tmpl_id')
+
+                rec.product_ids = products
+                rec.product_count = len(products)
 
     def _compute_product_count(self):
         for rec in self:
@@ -299,7 +331,6 @@ class CarWashJob(models.Model):
         self.ensure_one()
         template_ids = self.product_ids.mapped('product_tmpl_id').ids
 
-
         return {
             'type': 'ir.actions.act_window',
             'name': 'Products',
@@ -308,4 +339,29 @@ class CarWashJob(models.Model):
             'target': 'current',
         }
 
+    def action_open_delivery_orders(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Delivery Orders',
+            'res_model': 'stock.picking',
+            'view_mode': 'list,form',
+            'domain': [('origin', 'ilike', self.booking_id.display_name or str(self.id))],
+            'target': 'current',
+        }
 
+    def action_open_related_invoices(self):
+        self.ensure_one()
+        # if self.invoice_status != 'paid':
+        #     raise UserError("Invoices are visible only after payment is marked as Paid.")
+        # if not self.related_invoice_ids:
+        #     raise UserError("No invoices found for this job.")
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Invoices',
+            'view_mode': 'list,form',
+            'res_model': 'account.move',
+            'domain': [('id', 'in', self.related_invoice_ids.ids)],
+            'target': 'current',
+        }

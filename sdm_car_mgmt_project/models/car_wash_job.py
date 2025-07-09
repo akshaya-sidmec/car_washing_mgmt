@@ -26,7 +26,7 @@ class CarWashJob(models.Model):
     vehicle_number = fields.Char(string="Vehicle Number")
     vehicle_name = fields.Char(string="Vehicle Name")
     vehicle_type = fields.Char(string="Vehicle Type")
-    branch_id = fields.Many2one('car.branch', string="Branch")
+    branch_id = fields.Many2one('res.company', string="Branch")
     service_ids = fields.Many2many('car.wash.service', string="Services")
     package_id = fields.Many2one('car.wash.package', string="Package")
     package_price = fields.Float(string="Package Price")

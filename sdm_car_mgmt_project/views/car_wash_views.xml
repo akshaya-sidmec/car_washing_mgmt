@@ -82,7 +82,8 @@
                             <field name="invoice_id" readonly="1"/>
                             <field name="invoice_status" readonly="1" widget="badge"/>
                             <field name="job_status" readonly="1" widget="badge"/>
-
+                            <field name="rating"/>
+                            <field name="feedback" placeholder="Enter feedback here..."/>
                         </group>
 
                         <group string="Apply Promo code">
@@ -112,6 +113,7 @@
         <field name="name">Bookings</field>
         <field name="res_model">car.wash.booking</field>
         <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_car_wash_booking_list"/>
     </record>
 
 

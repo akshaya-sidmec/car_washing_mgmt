@@ -10,4 +10,43 @@
             </p>
         </field>
     </record>
+
+    <record id="view_partner_form_inherit_carwash" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.carwash</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="mode">extension</field>
+        <field name="priority" eval="90"/>
+        <field name="arch" type="xml">
+
+            <!-- ✅ Keep default Odoo buttons, add only this one -->
+            <xpath expr="//form/sheet/div[@class='oe_button_box']" position="inside">
+                <button name="action_book_car_wash"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-car">
+                    <div class="o_stat_info">
+                        <span class="o_stat_text">Book Car Wash</span>
+                    </div>
+                </button>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Car Wash History">
+                    <field name="car_wash_history_ids">
+                        <list string="Car Wash Jobs">
+                            <field name="booking_id"/>
+                            <field name="scheduled_time"/>
+                            <field name="vehicle_name"/>
+                            <field name="vehicle_number"/>
+                            <field name="branch_id"/>
+                            <field name="state"/>
+                            <field name="total_price"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
 </odoo>

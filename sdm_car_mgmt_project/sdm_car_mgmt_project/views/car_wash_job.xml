@@ -87,7 +87,7 @@
                     </group>
 
                     <group string="Checklist Preview"
-                        invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
+                           invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
 
                         <field name="merged_services_html" readonly="1"
                         />

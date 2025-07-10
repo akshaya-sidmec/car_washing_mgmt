@@ -39,11 +39,7 @@ class CarWashJob(models.Model):
     )
     select_package = fields.Boolean(string="Is Package?")
     total_price = fields.Monetary(string="Total Price")
-    currency_id = fields.Many2one(
-        'res.currency',
-        readonly=True,
-        default=lambda self: self.env.company.currency_id
-    )
+    currency_id = fields.Many2one('res.currency', readonly=True)
     invoice_number = fields.Char(string="Invoice Number", readonly=True, copy=False)
     time_slot = fields.Datetime(string="Preferred Time Slot")
 

@@ -5,7 +5,7 @@
     <record id="view_car_wash_job_form" model="ir.ui.view">
         <field name="name">car.wash.job.form</field>
         <field name="model">car.wash.job</field>
-<!--        <field name="groups_id" eval="[(4, ref('sdm_car_mgmt_project.group_carwash_supervisor'))]"/>-->
+        <!--        <field name="groups_id" eval="[(4, ref('sdm_car_mgmt_project.group_carwash_supervisor'))]"/>-->
         <field name="arch" type="xml">
             <form string="Washer Job" create="0">
                 <header>
@@ -87,7 +87,7 @@
                     </group>
 
                     <group string="Checklist Preview"
-                        invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
+                           invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
 
                         <field name="merged_services_html" readonly="1"
                         />
@@ -140,9 +140,9 @@
                         <field name="quality_checked_by" readonly="1"/>
                     </group>
 
-                    <group string=""  invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
+                    <group string="">
                         <button name="action_ready_to_deliver" string="Ready to Deliver" type="object"
-                                class="btn-primary" invisible="state != 'quality_check'"/>
+                                class="btn-primary"/>
                     </group>
 
                     <!--                    <group string="Customer Rating">-->
@@ -154,10 +154,26 @@
                         <field name="after_photos" widget="many2many_binary"/>
                     </group>
 
-                    <group string="Payment"  invisible="'user_has_groups', 'sdm_car_mgmt_project.group_carwash_supervisor'">
+                    <group string="Payment">
                         <button name="action_mark_paid" string="Payment" type="object" class="btn-primary"/>
                         <field name="invoice_id" readonly="1"/>
                         <field name="invoice_status" widget="badge" readonly="1"/>
+                    </group>
+                    <group>
+                        <separator string="Finalize" colspan="2"/>
+                        <button name="action_mark_done"
+                                string="Service Completed"
+                                type="object"
+                                class="btn-success"
+                                icon="fa-check-circle"
+                                invisible="state != 'paid'"/>
+                        <button name="action_mark_delivered"
+                                string="Delivered"
+                                type="object"
+                                class="btn-success"
+                                icon="fa-truck"
+                                invisible="state != 'done'"
+                        />
                     </group>
                 </sheet>
             </form>
@@ -171,16 +187,60 @@
         <field name="arch" type="xml">
             <list create="0">
                 <field name="booking_id"/>
-                <field name="washer_id"/>
                 <field name="scheduled_time"/>
-                <field name="state"/>
+                <field name="state" widget="badge"/>
+                <field name="washer_id"/>
                 <field name="vehicle_number"/>
                 <field name="service_ids" widget="many2many_tags"/>
                 <field name="package_id"/>
+                <field name="package_service_ids" widget="many2many_tags"/>
                 <!--                <field name="rating"/>-->
             </list>
         </field>
     </record>
+
+    <record id="view_car_wash_job_search" model="ir.ui.view">
+        <field name="name">car.wash.job.search</field>
+        <field name="model">car.wash.job</field>
+        <field name="arch" type="xml">
+            <search string="Search Car Wash Jobs">
+                <!-- Searchable fields -->
+                <field name="booking_id"/>
+                <field name="washer_id"/>
+                <field name="vehicle_number"/>
+                <field name="scheduled_time"/>
+                <field name="state"/>
+
+                <separator/>
+
+                <!-- Filters by Job Status -->
+                <filter string="Draft" name="filter_draft" domain="[('state','=','draft')]"/>
+                <filter string="Assigned" name="filter_assigned" domain="[('state','=','assigned')]"/>
+                <filter string="In Progress" name="filter_in_progress" domain="[('state','=','in_progress')]"/>
+                <filter string="Work Done" name="filter_work_done" domain="[('state','=','work_done')]"/>
+                <filter string="Quality Check" name="filter_quality_check" domain="[('state','=','quality_check')]"/>
+                <filter string="Ready to Deliver" name="filter_ready_to_deliver"
+                        domain="[('state','=','ready_to_deliver')]"/>
+                <filter string="Awaiting Payment" name="filter_awaiting_payment"
+                        domain="[('state','=','awaiting_payment')]"/>
+                <filter string="Paid" name="filter_paid" domain="[('state','=','paid')]"/>
+                <filter string="Completed" name="filter_done" domain="[('state','=','done')]"/>
+                <filter string="Delivered" name="filter_delivered" domain="[('state','=','delivered')]"/>
+                <filter string="Cancelled" name="filter_cancelled" domain="[('state','=','cancelled')]"/>
+
+                <separator/>
+
+                <!-- Group By Options -->
+                <group expand="0" string="Group By">
+                    <filter string="Washer" name="group_washer" context="{'group_by':'washer_id'}"/>
+                    <filter string="Scheduled Date" name="group_schedule" context="{'group_by':'scheduled_time'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by':'state'}"/>
+                    <filter string="Package" name="group_package" context="{'group_by':'package_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
 
     <!-- Washer Job Action -->
     <record id="action_car_wash_job" model="ir.actions.act_window">

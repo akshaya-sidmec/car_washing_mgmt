@@ -19,7 +19,8 @@ class CarWashBooking(models.Model):
     vehicle_type = fields.Char(string="Vehicle Type")
     vehicle_id = fields.Many2one('car.vehicle', string="Vehicle")
     license_plate_id_1 = fields.Char(related="vehicle_id.license_plate", string="Vehicle Number")
-    branch_id = fields.Many2one('car.branch', string="Branch", required=True)
+    # branch_id = fields.Many2one('car.branch', string="Branch", required=True)
+    branch_id = fields.Many2one('res.company', string="Branch", required=True)
     service_id = fields.Many2one('car.wash.service', string="Service")
     service_ids = fields.Many2many('car.wash.service', string="Services")
     total_price = fields.Monetary(string="Total Price", compute='_compute_total_price', store=True)
@@ -72,6 +73,22 @@ class CarWashBooking(models.Model):
 
     name = fields.Char(string="Booking Reference", required=True, copy=False, readonly=True,
                        default=lambda self: _('New'))
+
+    job_status = fields.Selection(
+        related='job_id.state',
+        string='Job Status',
+        store=True,
+        readonly=True
+    )
+
+    rating = fields.Selection([
+        ('1', '★☆☆☆☆'),
+        ('2', '★★☆☆☆'),
+        ('3', '★★★☆☆'),
+        ('4', '★★★★☆'),
+        ('5', '★★★★★'),
+    ], string="Customer Rating")
+    feedback = fields.Text(string="Feedback")
 
     @api.depends('invoice_id.payment_state')
     def _compute_invoice_status(self):
@@ -388,10 +405,4 @@ class CarBranch(models.Model):
     name = fields.Char(required=True)
     address = fields.Text()
 
-# class CarWashJob(models.Model):
-#     _name = 'car.wash.job'
-#     _description = 'Washer Job Scheduler'
-#
-#     booking_id = fields.Many2one('car.wash.booking', required=True)
-#     washer_id = fields.Many2one('res.users', string="Assigned Washer", required=True)
-#     scheduled_time = fields.Datetime(required=True)
+

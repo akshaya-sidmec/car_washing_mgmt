@@ -30,6 +30,7 @@
         "views/service_category.xml",
         "views/view_dashboard.xml",
         "views/view_feedback.xml",
+        # "views/invoices.xml",
         "views/menu.xml",
     ],
 

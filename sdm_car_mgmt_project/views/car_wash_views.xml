@@ -13,18 +13,24 @@
                 <field name="invoice_number"/>
                 <field name="customer_id"/>
                 <field name="vehicle_number"/>
-                <field name="vehicle_name"/>
-                <field name="vehicle_type"/>
+                <!--                <field name="vehicle_name"/>-->
+                <!--                <field name="vehicle_type"/>-->
                 <!--                <field name="vehicle_id"/>-->
                 <!--                <field name="license_plate_id_1"/>-->
                 <field name="branch_id"/>
                 <!--                <field name="service_id"/>-->
                 <field name="service_ids" widget="many2many_tags"/>
                 <field name="package_id"/>
+<!--                <field name="package_service_ids" widget="many2many_tags"/>-->
                 <field name="time_slot"/>
                 <!--                <field name="amount_total"/>-->
                 <field name="total_price"/>
-                <field name="state"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'"
+                       decoration-success="state == 'confirmed'"/>
+                <field name="job_status" readonly="1" widget="badge"/>
+                <field name="invoice_status" widget="badge" decoration-danger="invoice_status == 'not_paid'"
+                       decoration-success="invoice_status == 'paid'"/>
+
             </list>
         </field>
     </record>
@@ -62,9 +68,8 @@
                             <field name="service_ids" widget="many2many_tags" invisible="select_package != 'service'"/>
 
 
-
                             <field name="package_id"
-                                      invisible="select_package != 'package'"/>
+                                   invisible="select_package != 'package'"/>
 
 
                             <field name="package_service_ids"
@@ -76,26 +81,36 @@
                                    readonly="1"
                                    invisible="select_package != 'package'"/>
 
+                            <field name="discount"
+                                   readonly="1"
+                                   invisible="select_package != 'package'"/>
+
+                            <field name="price_after_discount"
+                                   readonly="1"
+                                   invisible="select_package != 'package'"/>
+
                             <field name="total_price" invisible="select_package != 'service'"/>
                             <field name="time_slot"/>
                             <button name="action_create_invoice" string="Create Invoice" type="object"
                                     class="btn-primary"/>
                             <field name="invoice_id" readonly="1"/>
-                            <field name="invoice_status" readonly="1" widget="badge"/>
+                            <field name="invoice_status" readonly="1" widget="badge"
+                                   decoration-danger="invoice_status == 'not_paid'"
+                                   decoration-success="invoice_status == 'paid'"/>
                             <field name="job_status" readonly="1" widget="badge"/>
                             <field name="rating"/>
                             <field name="feedback" placeholder="Enter feedback here..."/>
                         </group>
 
-<!--                        <group string="Apply Promo code">-->
-<!--                            <field name="apply_promo"/>-->
-<!--                            <field name="promo_code" invisible="not apply_promo"/>-->
-<!--                            <field name="loyalty_points_used" invisible="not apply_promo"/>-->
-<!--                            <field name="discount_amount" readonly="1" invisible="not apply_promo"/>-->
-<!--                            <field name="amount_total" readonly="1" invisible="not apply_promo"/>-->
-<!--                            <button name="action_apply_promo" string="Apply Promo" type="object"-->
-<!--                                    class="btn-outline-secondary" invisible="not apply_promo"/>-->
-<!--                        </group>-->
+                        <!--                        <group string="Apply Promo code">-->
+                        <!--                            <field name="apply_promo"/>-->
+                        <!--                            <field name="promo_code" invisible="not apply_promo"/>-->
+                        <!--                            <field name="loyalty_points_used" invisible="not apply_promo"/>-->
+                        <!--                            <field name="discount_amount" readonly="1" invisible="not apply_promo"/>-->
+                        <!--                            <field name="amount_total" readonly="1" invisible="not apply_promo"/>-->
+                        <!--                            <button name="action_apply_promo" string="Apply Promo" type="object"-->
+                        <!--                                    class="btn-outline-secondary" invisible="not apply_promo"/>-->
+                        <!--                        </group>-->
                     </group>
 
 
@@ -218,6 +233,48 @@
             </form>
         </field>
     </record>
+
+    <record id="view_car_wash_booking_search" model="ir.ui.view">
+        <field name="name">car.wash.booking.search</field>
+        <field name="model">car.wash.booking</field>
+        <field name="arch" type="xml">
+            <search string="Search Bookings">
+                <!-- Quick search fields -->
+                <field name="invoice_number"/>
+                <field name="customer_id"/>
+                <field name="vehicle_number"/>
+                <field name="branch_id"/>
+                <field name="state"/>
+                <field name="invoice_status"/>
+                <field name="job_status"/>
+
+                <separator/>
+
+                <!-- Filters -->
+                <filter string="Draft" name="filter_draft" domain="[('state','=','draft')]"/>
+                <filter string="Confirmed" name="filter_confirmed" domain="[('state','=','confirmed')]"/>
+
+                <separator/>
+
+                <filter string="Paid" name="filter_paid" domain="[('invoice_status','=','paid')]"/>
+                <filter string="Not Paid" name="filter_not_paid" domain="[('invoice_status','=','not_paid')]"/>
+
+                <separator/>
+
+                <!-- Group By Options -->
+                <group expand="0" string="Group By">
+                    <filter string="Scheduled Date" name="group_schedule" context="{'group_by':'time_slot'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by':'customer_id'}"/>
+                    <filter string="Branch" name="group_branch" context="{'group_by':'branch_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                    <filter string="Invoice Status" name="group_invoice_status"
+                            context="{'group_by':'invoice_status'}"/>
+                    <filter string="Job Status" name="group_job_status" context="{'group_by':'job_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
 
     <record id="action_car_branch" model="ir.actions.act_window">
         <field name="name">Branches</field>

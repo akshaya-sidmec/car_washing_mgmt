@@ -1,6 +1,6 @@
 from odoo import models, fields, api, _
 from datetime import datetime
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError,UserError
 import logging
 import re
 
@@ -41,14 +41,15 @@ class CarWashBooking(models.Model):
 
     package_id = fields.Many2one('car.wash.package', string="Package", domain="[('id', '!=', False)]")
 
-    package_price = fields.Float(string="Package Price", readonly=True)
+    package_price = fields.Float(compute='_compute_package_details', store=True)
+    discount = fields.Float(compute='_compute_package_details', store=True)
+    price_after_discount = fields.Float(compute='_compute_package_details', store=True)
     package_service_ids = fields.Many2many(
         'car.wash.service',
-        'car_wash_booking_package_service_rel',  # Unique relation table name
+        'car_wash_booking_package_service_rel',  # <-- Explicit relation table name
         'booking_id',
         'service_id',
-        string="Included Services from Package",
-        readonly=True
+        string='Package Services'
     )
 
     state = fields.Selection([
@@ -74,12 +75,6 @@ class CarWashBooking(models.Model):
     name = fields.Char(string="Booking Reference", required=True, copy=False, readonly=True,
                        default=lambda self: _('New'))
 
-    job_status = fields.Selection(
-        related='job_id.state',
-        string='Job Status',
-        store=True,
-        readonly=True
-    )
 
     rating = fields.Selection([
         ('1', '★☆☆☆☆'),
@@ -99,52 +94,28 @@ class CarWashBooking(models.Model):
                 rec.invoice_status = 'not_paid'
 
     def action_create_invoice(self):
-        for rec in self:
-            if rec.invoice_id:
-                # Invoice already exists; just open it
-                return {
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'account.move',
-                    'view_mode': 'form',
-                    'res_id': rec.invoice_id.id,
-                }
+        if not self.customer_id:
+            raise UserError('Please select a customer before creating an invoice.')
 
-            if not rec.customer_id:
-                raise ValidationError("Customer is required.")
+        line_description = f"{self.package_id.name} - Price: {self.package_price}, Discount: {self.discount}%, Final: {self.price_after_discount}"
 
-            all_services = rec.service_ids | rec.package_service_ids
-            if not all_services:
-                raise ValidationError("No services selected for this booking.")
-
-            invoice_lines = []
-            for service in all_services:
-                invoice_lines.append((0, 0, {
-                    'name': service.name,
-                    'quantity': 1,
-                    'price_unit': service.price,
-                }))
-
-            invoice = self.env['account.move'].create({
-                'move_type': 'out_invoice',
-                'partner_id': rec.customer_id.id,
-                'invoice_origin': f"Booking #{rec.id}",
-                'invoice_line_ids': invoice_lines
-            })
-
-            # Link invoice to booking
-            rec.invoice_id = invoice
-
-            # Link invoice to job, if exists
-            if rec.job_id:
-                rec.job_id.invoice_number = invoice.name
-                invoice.washer_job_id = rec.job_id.id
-
-            return {
-                'type': 'ir.actions.act_window',
-                'res_model': 'account.move',
-                'view_mode': 'form',
-                'res_id': invoice.id,
-            }
+        invoice = self.env['account.move'].create({
+            'move_type': 'out_invoice',
+            'partner_id': self.customer_id.id,
+            'invoice_line_ids': [(0, 0, {
+                'name': line_description,
+                'quantity': 1,
+                'price_unit': self.price_after_discount,
+            })]
+        })
+        self.invoice_id = invoice.id
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Invoice',
+            'res_model': 'account.move',
+            'res_id': invoice.id,
+            'view_mode': 'form',
+        }
 
     # def action_create_invoice(self):
     #     for rec in self:
@@ -178,14 +149,27 @@ class CarWashBooking(models.Model):
     #             'res_id': invoice.id,
     #         }
 
-    @api.onchange('package_id')
-    def _onchange_package_id(self):
-        if self.package_id:
-            self.package_price = self.package_id.price
-            self.package_service_ids = self.package_id.service_ids
-        else:
-            self.package_price = 0.0
-            self.package_service_ids = [(5, 0, 0)]
+    # @api.onchange('package_id')
+    # def _onchange_package_id(self):
+    #     if self.package_id:
+    #         self.package_price = self.package_id.price
+    #         self.package_service_ids = self.package_id.service_ids
+    #     else:
+    #         self.package_price = 0.0
+    #         self.package_service_ids = [(5, 0, 0)]
+    @api.depends('package_id')
+    def _compute_package_details(self):
+        for rec in self:
+            if rec.package_id:
+                rec.package_price = rec.package_id.price
+                rec.discount = rec.package_id.discount
+                rec.price_after_discount = rec.package_price - (rec.package_price * rec.discount / 100)
+                rec.package_service_ids = rec.package_id.service_ids
+            else:
+                rec.package_price = 0.0
+                rec.discount = 0.0
+                rec.price_after_discount = 0.0
+                rec.package_service_ids = False
 
     @api.depends('service_ids', 'service_ids.price')
     def _compute_total_price(self):
@@ -404,5 +388,4 @@ class CarBranch(models.Model):
 
     name = fields.Char(required=True)
     address = fields.Text()
-
 

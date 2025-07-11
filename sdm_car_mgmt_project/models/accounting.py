@@ -7,6 +7,14 @@ class WasherJobInvoice(models.Model):
 
     washer_job_id = fields.Many2one('car.wash.job', string='Washer Job')
 
+class InvoiceLines(models.Model):
+    _inherit = 'account.move.line'
+
+    booking = fields.Many2one("car.wash.booking", string="Booking")
+    booking_discount = fields.Float(related='booking.discount', string="Booking Discount", readonly=True)
+    booking_price_after_discount = fields.Float(related='booking.price_after_discount', string="Booking Price After Discount", readonly=True)
+
+
 
 class CarWashJob(models.Model):
     _inherit = 'car.wash.job'

@@ -81,6 +81,14 @@
                                    readonly="1"
                                    invisible="select_package != 'package'"/>
 
+                            <field name="discount"
+                                   readonly="1"
+                                   invisible="select_package != 'package'"/>
+
+                            <field name="price_after_discount"
+                                   readonly="1"
+                                   invisible="select_package != 'package'"/>
+
                             <field name="total_price" invisible="select_package != 'service'"/>
                             <field name="time_slot"/>
                             <button name="action_create_invoice" string="Create Invoice" type="object"

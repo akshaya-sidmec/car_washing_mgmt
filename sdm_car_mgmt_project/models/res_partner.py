@@ -1,9 +1,7 @@
 from odoo import models, fields, api
 
-<<<<<<< HEAD
 class InheritHrEmployee(models.Model):
     _inherit = 'hr.employee'
-=======
 
 class InheritContacts(models.Model):
     _inherit = 'res.partner'
@@ -23,4 +21,3 @@ class InheritContacts(models.Model):
             },
             'target': 'current',
         }
->>>>>>> vivek-dundigalla

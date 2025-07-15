@@ -6,6 +6,10 @@ class WasherJobInvoice(models.Model):
     _inherit = 'account.move'
 
     washer_job_id = fields.Many2one('car.wash.job', string='Washer Job')
+    x_actual_amount = fields.Monetary(string="Actual Amount", currency_field='currency_id', readonly=True)
+    x_discount = fields.Char(string="Discount")
+    x_final_amount = fields.Float(string="Final Amount")
+
 
 class InvoiceLines(models.Model):
     _inherit = 'account.move.line'

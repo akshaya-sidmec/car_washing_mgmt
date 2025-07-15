@@ -84,6 +84,16 @@ class CarWashBooking(models.Model):
         ('5', '★★★★★'),
     ], string="Customer Rating")
     feedback = fields.Text(string="Feedback")
+    display_discount = fields.Char(compute='_compute_display_discount', store=True)
+
+
+    @api.depends('discount')
+    def _compute_display_discount(self):
+        for rec in self:
+            if rec.discount:
+                rec.display_discount = f"-{int(rec.discount)}%"
+            else:
+                rec.display_discount = "0%"
 
     @api.depends('invoice_id.payment_state')
     def _compute_invoice_status(self):
@@ -97,18 +107,24 @@ class CarWashBooking(models.Model):
         if not self.customer_id:
             raise UserError('Please select a customer before creating an invoice.')
 
-        line_description = f"{self.package_id.name} - Price: {self.package_price}, Discount: {self.discount}%, Final: {self.price_after_discount}"
+        line_description = f"{self.package_id.name or 'Car Wash Service'} - {self.discount}% discount applied"
 
-        invoice = self.env['account.move'].create({
+        invoice_vals = {
             'move_type': 'out_invoice',
             'partner_id': self.customer_id.id,
+            'x_actual_amount': self.total_price,
+            'x_discount': self.display_discount,  # ✅ pass discount
+            'x_final_amount': self.price_after_discount,  # ✅ pass final amount
             'invoice_line_ids': [(0, 0, {
                 'name': line_description,
                 'quantity': 1,
                 'price_unit': self.price_after_discount,
             })]
-        })
+        }
+
+        invoice = self.env['account.move'].create(invoice_vals)
         self.invoice_id = invoice.id
+
         return {
             'type': 'ir.actions.act_window',
             'name': 'Invoice',

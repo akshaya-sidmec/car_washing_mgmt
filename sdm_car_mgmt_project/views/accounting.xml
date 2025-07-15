@@ -9,6 +9,23 @@
         <field name="domain">[('invoice_origin', 'ilike', 'CWS/')]</field>
     </record>
 
+<record id="view_move_form_inherit_car_wash" model="ir.ui.view">
+    <field name="name">account.move.form.inherit.car.wash</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_move_form" />
+    <field name="arch" type="xml">
+       <xpath expr="//group[hasclass('oe_subtotal_footer')]" position="replace">
+           <group class="oe_subtotal_footer" col="2">
+                <field name="x_actual_amount" string="Actual Amount" readonly="1"/>
+                <field name="x_discount" string="Discount (%)" readonly="1"
+                       style="color:red;font-weight:bold;"/>
+                <field name="amount_total" string="Final Amount" readonly="1"/>
+            </group>
+        </xpath>
+    </field>
+</record>
+
+
     <!-- Smart Button for Invoices on Job Form -->
 <!--    <record id="view_car_wash_job_form_inherit_invoice_button" model="ir.ui.view">-->
 <!--        <field name="name">car.wash.job.form.inherit.invoice.button</field>-->

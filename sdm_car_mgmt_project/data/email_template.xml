@@ -15,20 +15,63 @@
                     <td align="left" style="min-width: 590px; padding: 20px;">
                         <h3>Booking Confirmation</h3>
                         <p>
-                            Dear <t t-out="object.customer_id.name"/>,
+                            Dear<t t-out="object.customer_id.name"/>,
                         </p>
                         <p>
-                            Your car wash booking with Invoice Number <strong><t t-out="object.invoice_number"/></strong> is now confirmed!
+                            Your car wash booking with Invoice Number
+                            <strong>
+                                <t t-out="object.invoice_number"/>
+                            </strong>
+                            is now confirmed!
                         </p>
                         <p>
                             <strong>Booking Details:</strong>
                         </p>
                         <ul>
-                            <li><strong>Service:</strong> <t t-out="object.service_id.name"/></li>
-                            <li><strong>Vehicle Number:</strong> <t t-out="object.vehicle_number"/></li>
-                            <li><strong>Preferred Time Slot:</strong> <t t-out="object.time_slot.strftime('%d %B %Y %I:%M %p')"/></li>
-                            <li><strong>Branch:</strong> <t t-out="object.branch_id.name"/></li>
-                            <li><strong>Total Amount:</strong> <t t-out="object.total_price"/> <t t-out="object.currency_id.symbol"/></li>
+                             <t t-if="object.package_id">
+                                <li>
+                                    <strong>Package:</strong>
+                                    <t t-esc="object.package_id.name"/>
+                                </li>
+                                <t t-if="object.package_id.service_ids">
+                                    <li>
+                                        <strong>Services Included:</strong>
+                                        <ul>
+                                            <t t-foreach="object.package_id.service_ids" t-as="pkg_service">
+                                                <li>
+                                                    <t t-esc="pkg_service.name"/>
+                                                </li>
+                                            </t>
+                                        </ul>
+                                    </li>
+                                </t>
+                            </t>
+
+                            <!-- Else, if no package, display individual services if selected -->
+                            <t t-if="not object.package_id and object.service_ids">
+                                <li>
+                                    <strong>Services:</strong>
+                                    <t t-set="service_names" t-value="[s.name for s in object.service_ids]"/>
+                                    <t t-esc="', '.join(service_names)"/>
+                                </li>
+                            </t>
+                            <li>
+                                <strong>Vehicle Number:</strong>
+                                <t t-out="object.vehicle_number"/>
+                            </li>
+                            <li>
+                                <strong>Preferred Time Slot:</strong>
+                                <t t-out="object.time_slot.strftime('%d %B %Y %I:%M %p')"/>
+                            </li>
+                            <li>
+                                <strong>Branch:</strong>
+                                <t t-out="object.branch_id.name"/>
+                            </li>
+                            <li>
+                                <strong>Total Amount:</strong>
+                                <t t-out="object.total_price"/>
+                                <t t-out="object.currency_id.symbol"/>
+                            </li>
                         </ul>
                         <p>
                             We look forward to seeing you!
@@ -37,7 +80,8 @@
                         <p>
                             Regards,
                             <br/>
-                            The <t t-out="user.company_id.name or 'Car Wash Team'"/>
+                            The
+                            <t t-out="user.company_id.name or 'Car Wash Team'"/>
                         </p>
                     </td>
                 </tr>

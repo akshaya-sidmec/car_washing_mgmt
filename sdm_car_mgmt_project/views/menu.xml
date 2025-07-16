@@ -34,7 +34,7 @@
               action="base.action_res_company_form" sequence="3"/>
 <!--    <menuitem id="menu_car_wash_management_branches" name="Branches" parent="menu_car_wash_management"-->
 <!--              action="action_car_branch" sequence="3"/>-->
-    <menuitem id="menu_car_wash_management_feedback" name="Feedback" parent="menu_car_wash_management" action="action_car_wash_feedback" sequence="5"/>
+    <menuitem id="menu_car_wash_management_feedback" name="Feedback" parent="menu_car_wash_management" sequence="5"/>
     <menuitem id="menu_car_wash_management_product" name="Products" parent="menu_car_wash_management"
               action="stock.product_template_action_product" sequence="4"/>
 </odoo>

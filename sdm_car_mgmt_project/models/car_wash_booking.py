@@ -1,8 +1,11 @@
 from odoo import models, fields, api, _
 from datetime import datetime
 from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError
 import logging
 import re
+import uuid
+import base64
 
 _logger = logging.getLogger(__name__)
 
@@ -90,6 +93,21 @@ class CarWashBooking(models.Model):
     ], string="Customer Rating")
     feedback = fields.Text(string="Feedback")
 
+    feedback_ids = fields.One2many(
+        'car.wash.feedback', 'booking_id', string='Customer Feedback')
+
+    parent_company_id = fields.Many2one(
+        'res.company', string="Parent Company", compute='_compute_parent_company', store=True
+    )
+
+    company_id = fields.Many2one('res.company', string="Company", default=lambda self: self.env.company, index=True)
+
+
+    @api.depends('branch_id')
+    def _compute_parent_company(self):
+        for rec in self:
+            rec.parent_company_id = rec.branch_id.parent_id if rec.branch_id and rec.branch_id.parent_id else False
+
     @api.depends('invoice_id.payment_state')
     def _compute_invoice_status(self):
         for rec in self:
@@ -131,10 +149,10 @@ class CarWashBooking(models.Model):
                 'invoice_line_ids': invoice_lines
             })
 
-            # Link invoice to booking
+
             rec.invoice_id = invoice
 
-            # Link invoice to job, if exists
+
             if rec.job_id:
                 rec.job_id.invoice_number = invoice.name
                 invoice.washer_job_id = rec.job_id.id
@@ -145,38 +163,6 @@ class CarWashBooking(models.Model):
                 'view_mode': 'form',
                 'res_id': invoice.id,
             }
-
-    # def action_create_invoice(self):
-    #     for rec in self:
-    #         if not rec.customer_id:
-    #             raise ValidationError("Customer is required.")
-    #         if not rec.total_price:
-    #             raise ValidationError("Total price must be set.")
-    #
-    #         invoice = self.env['account.move'].create({
-    #             'move_type': 'out_invoice',
-    #             'partner_id': rec.customer_id.id,
-    #             'invoice_origin': f"Booking #{rec.id}",
-    #             'invoice_line_ids': [(0, 0, {
-    #                 'name': f'Car Wash - {self.invoice_number or "No Ref"}',
-    #                 'quantity': 1,
-    #                 'price_unit': rec.total_price,
-    #             })]
-    #         })
-    #
-    #         # Link to booking
-    #         rec.invoice_id = invoice
-    #
-    #         # Also update related job, if any
-    #         if rec.job_id:
-    #             rec.job_id.invoice_number = invoice.name
-    #
-    #         return {
-    #             'type': 'ir.actions.act_window',
-    #             'res_model': 'account.move',
-    #             'view_mode': 'form',
-    #             'res_id': invoice.id,
-    #         }
 
     @api.onchange('package_id')
     def _onchange_package_id(self):
@@ -271,15 +257,43 @@ class CarWashBooking(models.Model):
             if rec.promo_code == "SAVE10":
                 rec.discount_amount += 10
 
-    # def action_confirm_booking(self):
-    #     template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
-    #     for rec in self:
-    #         if rec.state != 'draft':
-    #             continue
-    #         rec.state = 'confirmed'
-    #         if template_id:
-    #             template_id.send_mail(rec.id, force_send=True)
-    #         # rec._send_confirmation_sms()
+    def action_open_send_wizard(self):
+        self.ensure_one()
+        customer_name = self.customer_id.name or "Customer"
+        invoice_number = self.invoice_number or "N/A"
+        invoice_id = self.invoice_id.name or "N/A"
+        total_amount = self.total_price or 0.0
+        currency_symbol = self.currency_id.symbol or "₹"  # Make sure currency_id is defined in your model
+        branch_name = self.branch_id.name or "Branch"
+        parent_company_id = self.parent_company_id.name or "Company"
+
+        body = (
+            f"Dear {customer_name},<br/><br/>"
+            f"Here is your Booking ID <strong>[{invoice_number}]</strong> and invoice Number <strong>[{invoice_id}]</strong>.<br/>"
+            f"Amounting in {currency_symbol}&nbsp;<strong>{total_amount:.2f}</strong>.<br/><br/>"
+            f"Do not hesitate to contact us if you have any questions.<br/><br/>"
+            f"--<br/>{branch_name}<br/>{parent_company_id}"
+        )
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Send Booking Email',
+            'res_model': 'car.wash.send.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_booking_id': self.id,
+                'default_mail_partner_ids': [(6, 0, [self.customer_id.id])],
+                'default_mail_subject': f"Booking and Invoice - {invoice_number}",
+                'default_mail_body': body,
+            }
+        }
+
+    def action_print_report(self):
+        if self.invoice_status == 'not_paid':
+            return self.env.ref('sdm_car_mgmt_project.report_car_wash_booking_unpaid').report_action(self)
+        if self.invoice_status == 'paid':
+            return self.env.ref('sdm_car_mgmt_project.report_car_wash_booking_paid').report_action(self)
 
     def action_confirm_booking(self):
         template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
@@ -348,11 +362,9 @@ class CarWashBooking(models.Model):
         _logger.info(f"Email sent to customer {self.customer_id.email} for booking #{self.id}")
 
     def _send_confirmation_sms(self):
-        # Placeholder for SMS logic
         _logger.info(f"SMS sent to customer {self.customer_id.mobile} for booking #{self.id}")
 
 
-# car_wash_service.py
 class CarWashService(models.Model):
     _name = 'car.wash.service'
     _description = 'Car Wash Service'
@@ -404,5 +416,3 @@ class CarBranch(models.Model):
 
     name = fields.Char(required=True)
     address = fields.Text()
-
-

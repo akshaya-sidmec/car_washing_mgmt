@@ -16,20 +16,25 @@
     """,
 
     "author": "sidmec_interns",
-    "depends": ['base', 'contacts', 'account', 'stock', 'hr', 'product', 'mail', 'board'],
+    "depends": ['base', 'contacts', 'account', 'stock', 'hr', 'product', 'mail', 'board', 'website'],
+
+
 
     "data": [
         "security/security.xml",
         "security/ir.model.access.csv",
         "data/email_template.xml",
+        "reports/report_booking_email_template.xml",
+        "reports/mail_template.xml",
         "views/accounting.xml",
         "views/hr_employee.xml",
         "views/res_partner.xml",
         "views/car_wash_job.xml",
         "views/car_wash_views.xml",
         "views/service_category.xml",
+        "views/feedback.xml",
+        "views/car_wash_send_wizard.xml",
         "views/view_dashboard.xml",
-        "views/view_feedback.xml",
         "views/menu.xml",
     ],
 

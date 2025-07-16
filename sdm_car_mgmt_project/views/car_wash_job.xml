@@ -100,10 +100,6 @@
                                 invisible="state != 'assigned'"/>
                     </group>
 
-                    <!--                    <group string="Current Job Status">-->
-                    <!--                        <field name="state" readonly="1" widget="badge"/>-->
-                    <!--                    </group>-->
-
 
                     <group string="Service Checklist">
                         <field name="checklist_line_ids">

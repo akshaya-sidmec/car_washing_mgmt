@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="report_car_wash_booking_email" model="ir.actions.report">
+        <field name="name">Booking Email Report</field>
+        <field name="model">car.wash.booking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sdm_car_mgmt_project.report_car_wash_booking_email_template</field>
+        <field name="report_file">sdm_car_mgmt_project.report_car_wash_booking_email_template</field>
+        <field name="print_report_name">'Booking - %s' % (object.invoice_number)</field>
+    </record>
+
+    <template id="report_car_wash_booking_email_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page">
+                        <h2>Car Wash Booking Confirmation</h2>
+
+                        <p>Hello
+                            <strong>
+                                <t t-esc="doc.customer_id.name"/>
+                            </strong>
+                            ,
+                        </p>
+
+                        <p>Thank you for booking with us! Here are your booking details:</p>
+
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <strong>Booking ID:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-esc="doc.invoice_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Vehicle Number:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-esc="doc.vehicle_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Branch:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-esc="doc.branch_id.name"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Date and Time:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-esc="doc.time_slot"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Package:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-if="doc.package_id">
+                                            <t t-esc="doc.package_id.name"/>
+                                            <ul>
+                                                <t t-foreach="doc.package_service_ids" t-as="service">
+                                                    <li>
+                                                        <t t-esc="service.name"/>
+                                                    </li>
+                                                </t>
+                                            </ul>
+                                        </t>
+                                        <t t-elif="doc.service_ids">
+                                            <ul>
+                                                <t t-foreach="doc.service_ids" t-as="service">
+                                                    <li>
+                                                        <t t-esc="service.name"/>
+                                                    </li>
+                                                </t>
+                                            </ul>
+                                        </t>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Total Price:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-esc="doc.total_price"/>
+                                        <t t-esc="doc.currency_id.symbol"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>Payment Status:</strong>
+                                    </td>
+                                    <td>
+                                        <t t-esc="doc.invoice_status"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p>
+                            Please complete your payment if it's pending, or relax if it's already done.
+                            We look forward to providing you with the best service!
+                        </p>
+
+                        <p>
+                            We'd love to hear your thoughts —
+                            <br/>
+                            <a t-att-href="'/feedback/%s' % doc.id">Click here to rate our service</a>
+                        </p>
+
+                        <p style="margin-top: 50px;">Sincerely,<br/>The Car Wash Team
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

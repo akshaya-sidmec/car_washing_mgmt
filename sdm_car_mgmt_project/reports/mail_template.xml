@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="report_car_wash_booking_paid" model="ir.actions.report">
+        <field name="name">Car Wash Paid Booking Report</field>
+        <field name="model">car.wash.booking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sdm_car_mgmt_project.report_car_wash_paid_template</field>
+        <field name="report_file">sdm_car_mgmt_project.report_car_wash_paid_template</field>
+        <field name="print_report_name">'Paid Booking - %s' % (object.invoice_number)</field>
+    </record>
+
+    <record id="report_car_wash_booking_unpaid" model="ir.actions.report">
+        <field name="name">Car Wash Unpaid Booking Report</field>
+        <field name="model">car.wash.booking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">sdm_car_mgmt_project.report_car_wash_unpaid_template</field>
+        <field name="report_file">sdm_car_mgmt_project.report_car_wash_unpaid_template</field>
+        <field name="print_report_name">'Unpaid Booking - %s' % (object.invoice_number)</field>
+    </record>
+
+
+    <template id="report_car_wash_paid_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page">
+                        <div style="font-family: Arial, sans-serif; font-size: 15px; margin-top: 80px; color: #333;">
+                            <p>Dear
+                                <strong>
+                                    <t t-esc="doc.customer_id.name"/>
+                                </strong>
+                                ,
+                            </p>
+
+                            <p>
+                                We’re pleased to confirm that your vehicle appointment has been successfully booked.
+                                Below are the details of your booking:
+                            </p>
+
+                            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <strong>Booking ID:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.invoice_number"/>
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="padding: 8px;">
+                                        <strong>Vehicle Number:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.vehicle_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <strong>Branch:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.branch_id.name"/>
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="padding: 8px;">
+                                        <strong>Scheduled Date and Time:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.time_slot"/>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td style="padding: 8px; vertical-align: top;">
+                                        <strong>Selected Package / Services:</strong>
+                                    </td>
+                                    <td style="padding: 8px;" colspan="2">
+                                        <t t-if="doc.package_id">
+                                            <p>
+                                                <strong>
+                                                    <t t-esc="doc.package_id.name"/>
+                                                </strong>
+                                            </p>
+                                            <t t-if="doc.package_service_ids">
+                                                <ul style="margin: 0; padding-left: 16px;">
+                                                    <t t-foreach="doc.package_service_ids" t-as="service">
+                                                        <li>
+                                                            <t t-esc="service.name"/>
+                                                        </li>
+                                                    </t>
+                                                </ul>
+                                            </t>
+                                        </t>
+
+                                        <t t-elif="doc.service_ids">
+                                            <ul style="margin: 0; padding-left: 16px;">
+                                                <t t-foreach="doc.service_ids" t-as="service">
+                                                    <li>
+                                                        <t t-esc="service.name"/>
+                                                    </li>
+                                                </t>
+                                            </ul>
+                                        </t>
+                                    </td>
+                                </tr>
+
+
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="padding: 8px;">
+                                        <strong>Total Amount:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.total_price"/>
+                                        <t t-esc="doc.currency_id.symbol"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <strong>Payment Status:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.invoice_status"/>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p>Thank you for your advance payment. Your service is scheduled and we’re ready to serve
+                                you with the best car wash experience.
+                            </p>
+
+
+                            <p>
+                                If you have any questions or need to make changes to your appointment,
+                                feel free to contact us.
+                            </p>
+
+                            <p>We'd love your feedback!</p>
+                            <p>
+                                <a t-att-href="'/feedback/%s' % (doc.id)">Click here to rate our service</a>
+                            </p>
+
+
+                            <p style="margin-top: 50px;">Warm regards,</p>
+                            <p>
+                                <strong>The Car Wash Team</strong>
+                                <br/>
+                                <span>
+                                    <t t-esc="res_company.name or 'Company Name'"/>
+                                </span>
+                            </p>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_car_wash_unpaid_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="doc">
+                    <div class="page">
+                        <div style="font-family: Arial, sans-serif; font-size: 15px; margin-top: 80px; color: #333;">
+                            <p>Dear
+                                <strong>
+                                    <t t-esc="doc.customer_id.name"/>
+                                </strong>
+                                ,
+                            </p>
+
+                            <p>
+                                We’re pleased to confirm that your vehicle appointment has been successfully booked.
+                                Below are the details of your booking:
+                            </p>
+
+                            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <strong>Booking ID:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.invoice_number"/>
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="padding: 8px;">
+                                        <strong>Vehicle Number:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.vehicle_number"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <strong>Branch:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.branch_id.name"/>
+                                    </td>
+                                </tr>
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="padding: 8px;">
+                                        <strong>Scheduled Date and Time:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.time_slot"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; vertical-align: top;">
+                                        <strong>Selected Package / Services:</strong>
+                                    </td>
+                                    <td style="padding: 8px;" colspan="2">
+                                        <t t-if="doc.package_id">
+                                            <p>
+                                                <strong>
+                                                    <t t-esc="doc.package_id.name"/>
+                                                </strong>
+                                            </p>
+                                            <t t-if="doc.package_service_ids">
+                                                <ul style="margin: 0; padding-left: 16px;">
+                                                    <t t-foreach="doc.package_service_ids" t-as="service">
+                                                        <li>
+                                                            <t t-esc="service.name"/>
+                                                        </li>
+                                                    </t>
+                                                </ul>
+                                            </t>
+                                        </t>
+
+                                        <t t-elif="doc.service_ids">
+                                            <ul style="margin: 0; padding-left: 16px;">
+                                                <t t-foreach="doc.service_ids" t-as="service">
+                                                    <li>
+                                                        <t t-esc="service.name"/>
+                                                    </li>
+                                                </t>
+                                            </ul>
+                                        </t>
+                                    </td>
+                                </tr>
+
+                                <tr style="background-color: #f9f9f9;">
+                                    <td style="padding: 8px;">
+                                        <strong>Total Amount:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">₹
+                                        <t t-esc="doc.total_price"/>
+                                        <t t-esc="doc.currency_id.symbol"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px;">
+                                        <strong>Payment Status:</strong>
+                                    </td>
+                                    <td style="padding: 8px;">
+                                        <t t-esc="doc.invoice_status"/>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p>
+                                <strong>Note:</strong>
+                                Your booking is confirmed, but payment is still pending. Please complete the payment
+                                before or at the time of service to avoid any inconvenience.
+                            </p>
+
+
+                            <p>
+                                If you have any questions or need to make changes to your appointment,
+                                feel free to contact us.
+                            </p>
+
+                            <p>We'd love your feedback!</p>
+                            <p>
+                                <a t-att-href="'/feedback/%s' % (doc.id)">Click here to rate our service</a>
+                            </p>
+
+
+                            <p style="margin-top: 50px;">Warm regards,</p>
+                            <p>
+                                <strong>The Car Wash Team</strong>
+                                <br/>
+                                <span>
+                                    <t t-esc="res_company.name or 'Company Name'"/>
+                                </span>
+                            </p>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

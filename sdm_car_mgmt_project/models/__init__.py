@@ -5,3 +5,5 @@ from . import res_partner
 from . import car_wash_job
 from .import accounting
 from . import res_company
+from . import car_wash_feedback
+from . import send_email

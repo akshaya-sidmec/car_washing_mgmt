@@ -57,17 +57,7 @@ class CarWashJob(models.Model):
         ('cancelled', 'Cancelled'),
     ], string="Job Status", default='draft', tracking=True)
 
-    # state = fields.Selection([
-    #     ('draft', 'Draft'),
-    #     ('scheduled', 'Scheduled'),
-    #     ('in_progress', 'In Progress'),
-    #     ('checklist_review', 'Checklist Review'),
-    #     ('supervisor_review', 'Supervisor Review'),
-    #     ('awaiting_payment', 'Awaiting Payment'),
-    #     ('paid', 'Paid'),
-    #     ('done', 'Done'),
-    #     ('cancelled', 'Cancelled')
-    # ], string='Status', default='draft')
+
 
     before_photos = fields.Many2many(
         'ir.attachment',
@@ -176,27 +166,7 @@ class CarWashJob(models.Model):
 
     package_ids = fields.Many2many('car.wash.package', string="Packages")
 
-    # def action_schedule_job(self):
-    #     for job in self:
-    #         # Use a set to avoid duplicates
-    #         product_ids = set()
-    #         services = job.service_ids | job.package_service_ids
-    #
-    #         for service in services:
-    #             product = service.product_id
-    #             if not product or product.id in product_ids:
-    #                 continue
-    #             product_ids.add(product.id)
-    #
-    #             available_qty = product.qty_available - product.outgoing_qty
-    #
-    #             if available_qty <= 0:
-    #                 raise ValidationError(
-    #                     _(f"Cannot schedule job: '{product.display_name}' has no available stock.")
-    #                 )
-    #
-    #         # If all products have sufficient stock, schedule the job
-    #         job.state = 'assigned'
+
 
     @api.depends('service_ids', 'package_service_ids')
     def _compute_merged_services_html(self):
@@ -223,11 +193,6 @@ class CarWashJob(models.Model):
         self.ensure_one()
         self.state = 'ready_to_deliver'
 
-    # def action_set_scheduled(self):
-    #     self.state = 'scheduled'
-
-    # def action_start_job(self):
-    #     self.state = 'in_progress'
 
     def action_upload_checklist(self):
         self.state = 'checklist_review'

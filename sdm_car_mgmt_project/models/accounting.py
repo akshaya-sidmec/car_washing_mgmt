@@ -9,6 +9,7 @@ class WasherJobInvoice(models.Model):
     x_actual_amount = fields.Monetary(string="Actual Amount", currency_field='currency_id', readonly=True)
     x_discount = fields.Char(string="Discount")
     x_final_amount = fields.Float(string="Final Amount")
+    x_loyalty_discount_percentage = fields.Float(string="Loyalty Discount (%)", readonly=True)
 
 
 class InvoiceLines(models.Model):

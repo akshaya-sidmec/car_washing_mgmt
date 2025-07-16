@@ -19,6 +19,8 @@
                 <field name="x_actual_amount" string="Actual Amount" readonly="1"/>
                 <field name="x_discount" string="Discount (%)" readonly="1"
                        style="color:red;font-weight:bold;"/>
+                <field name="x_loyalty_discount_percentage" string="Loyality (%)" readonly="1"
+                       style="color:red;font-weight:bold;"/>
                 <field name="amount_total" string="Final Amount" readonly="1"/>
             </group>
         </xpath>

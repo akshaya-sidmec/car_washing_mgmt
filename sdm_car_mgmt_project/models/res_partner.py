@@ -8,6 +8,9 @@ class InheritContacts(models.Model):
 
     car_wash_history_ids = fields.One2many(
         'car.wash.job', 'customer_id', string="Car Wash History")
+    visit_count = fields.Integer("Visit Count", default=0)
+
+    loyalty_wallet = fields.Float("Loyalty Wallet", default=0.0)
 
     def action_book_car_wash(self):
         return {

@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <!-- Menu -->
-
-
     <!-- Booking Action & Views -->
     <record id="view_car_wash_booking_list" model="ir.ui.view">
         <field name="name">car.wash.booking.list</field>
@@ -44,7 +41,7 @@
                     <!--                    <button name="action_apply_promo" string="Apply Promo" type="object" class="btn-secondary" invisible="not apply_promo"/>-->
                     <!--                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>-->
                     <button name="action_confirm_booking" string="Confirm Booking" type="object" class="btn-primary"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,scheduled"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
                     <!--                    <button name="action_register_payment" type="object" string="Register Payment" class="btn-primary"-->
                     <!--                            invisible="state != 'confirmed' and payment_state == 'paid'"/>-->
                 </header>
@@ -90,6 +87,8 @@
                                    invisible="select_package != 'package'"/>
 
                             <field name="total_price" invisible="select_package != 'service'"/>
+                            <field name="apply_loyalty_discount" invisible="customer_id.loyalty_wallet  == 0"/>
+                            <field name="price_after_loyalty" readonly="1" force_save="1" invisible="apply_loyalty_discount == False"/>
                             <field name="time_slot"/>
                             <button name="action_create_invoice" string="Create Invoice" type="object"
                                     class="btn-primary"/>

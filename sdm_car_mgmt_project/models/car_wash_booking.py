@@ -87,6 +87,53 @@ class CarWashBooking(models.Model):
     apply_loyalty_discount = fields.Boolean(string="Apply Loyalty Points", default=False)
     price_after_loyalty = fields.Monetary(string="Price After Loyalty Discount", compute='_compute_discount',
                                           store=True)
+    final_invoice_price = fields.Monetary(
+        string="Final Invoice Price",
+        compute="_compute_final_invoice_price",
+        store=True,
+        currency_field='currency_id'
+    )
+
+    @api.depends(
+        'service_ids', 'service_ids.price',
+        'package_id', 'package_id.price', 'package_id.discount',
+        'apply_loyalty_discount', 'customer_id.loyalty_wallet',
+        'select_package'
+    )
+    def _compute_final_invoice_price(self):
+        for rec in self:
+            final_price = 0.0
+
+            if rec.select_package == 'service' and rec.service_ids:
+                base_price = sum(service.price for service in rec.service_ids)
+
+                # Loyalty discount on service
+                if rec.apply_loyalty_discount and rec.customer_id.loyalty_wallet >= 100:
+                    blocks = rec.customer_id.loyalty_wallet // 100
+                    discount_percent = min(blocks * 5, 100)
+                    loyalty_discount = base_price * discount_percent / 100
+                    final_price = base_price - loyalty_discount
+                else:
+                    final_price = base_price
+
+            elif rec.select_package == 'package' and rec.package_id:
+                pkg_price = rec.package_id.price
+                pkg_discount_percent = rec.package_id.discount or 0.0
+                price_after_pkg_discount = pkg_price - (pkg_price * pkg_discount_percent / 100)
+
+                # Loyalty discount on top of package discount
+                if rec.apply_loyalty_discount and rec.customer_id.loyalty_wallet >= 100:
+                    blocks = rec.customer_id.loyalty_wallet // 100
+                    discount_percent = min(blocks * 5, 100)
+                    loyalty_discount = price_after_pkg_discount * discount_percent / 100
+                    final_price = price_after_pkg_discount - loyalty_discount
+                else:
+                    final_price = price_after_pkg_discount
+
+            else:
+                final_price = 0.0  # No service/package selected
+
+            rec.final_invoice_price = max(final_price, 0.0)  # Safety to avoid negative
 
     @api.depends('discount')
     def _compute_display_discount(self):
@@ -109,42 +156,81 @@ class CarWashBooking(models.Model):
             raise UserError('Please select a customer before creating an invoice.')
 
         invoice_lines = []
-
         if self.select_package == 'package' and self.package_id:
-            # Package: apply discount
+            price_after_pkg_discount = self.price_after_discount
+
+            if self.apply_loyalty_discount and self.customer_id.loyalty_wallet >= 100:
+                blocks = self.customer_id.loyalty_wallet // 100
+                discount_percent = min(blocks * 5, 100)
+                loyalty_discount_amount = price_after_pkg_discount * discount_percent / 100
+                final_price = price_after_pkg_discount - loyalty_discount_amount
+            else:
+                final_price = price_after_pkg_discount
+
             line_description = f"{self.package_id.name} - {self.discount}% discount applied"
             invoice_lines.append((0, 0, {
                 'name': line_description,
                 'quantity': 1,
-                'price_unit': self.price_after_discount,
+                'price_unit': final_price,
             }))
             x_actual_amount = self.total_price
             x_discount = self.display_discount
-            x_final_amount = self.price_after_discount
+            x_final_amount = final_price
+
+
 
         elif self.select_package == 'service' and self.service_ids:
-            total_service_price = 0
-            for service in self.service_ids:
-                invoice_lines.append((0, 0, {
-                    'name': service.name,
-                    'quantity': 1,
-                    'price_unit': service.price,
-                }))
-                total_service_price += service.price
 
-            x_actual_amount = total_service_price
+            total_service_price = 0
+
+            for service in self.service_ids:
+
+                line_price = service.price
+
+                # Apply loyalty discount proportionally
+
+                if self.apply_loyalty_discount and self.customer_id.loyalty_wallet >= 100:
+                    blocks = self.customer_id.loyalty_wallet // 100
+
+                    discount_percent = min(blocks * 5, 100)
+
+                    line_price -= (line_price * discount_percent / 100)
+
+                invoice_lines.append((0, 0, {
+
+                    'name': service.name,
+
+                    'quantity': 1,
+
+                    'price_unit': line_price,
+
+                }))
+
+                total_service_price += line_price
+
+            x_actual_amount = self.total_price
+
             x_discount = 0.0
+
             x_final_amount = total_service_price
 
         else:
             raise UserError('Please select either a package or at least one service before creating an invoice.')
+
+        # Calculate loyalty discount percentage for recording
+        loyalty_discount_percent = 0.0
+
+        if self.apply_loyalty_discount and self.customer_id and self.customer_id.loyalty_wallet >= 100:
+            blocks = self.customer_id.loyalty_wallet // 100
+            loyalty_discount_percent = min(blocks * 5, 100)
 
         invoice_vals = {
             'move_type': 'out_invoice',
             'partner_id': self.customer_id.id,
             'x_actual_amount': x_actual_amount,
             'x_discount': x_discount,
-            'x_final_amount': x_final_amount,
+            'x_final_amount': self.final_invoice_price,
+            'x_loyalty_discount_percentage': loyalty_discount_percent,  # <<< add this line
             'invoice_line_ids': invoice_lines
         }
 
@@ -192,18 +278,16 @@ class CarWashBooking(models.Model):
         'select_package',
         'package_id.price',
         'customer_id.loyalty_wallet',
-        'price_after_discount'
+        'price_after_discount',
+        'service_ids',
     )
     def _compute_discount(self):
         for rec in self:
-            price_before_loyalty_calc = 0.0
-            package_built_in_discount_value = 0.0
-
-            if rec.select_package == 'package':
-                price_before_loyalty_calc = rec.price_after_discount  # This is price after package's own % discount
+            if rec.select_package == 'package' and rec.package_id:
+                price_before_loyalty_calc = rec.price_after_discount
                 package_built_in_discount_value = rec.package_price - rec.price_after_discount
             else:
-                price_before_loyalty_calc = rec.total_price  # This is sum of service prices
+                price_before_loyalty_calc = rec.total_price
                 package_built_in_discount_value = 0.0
 
             loyalty_discount_amount = 0.0
@@ -212,22 +296,13 @@ class CarWashBooking(models.Model):
             if rec.apply_loyalty_discount and rec.customer_id and rec.customer_id.loyalty_wallet >= 100:
                 loyalty_blocks = rec.customer_id.loyalty_wallet // 100
                 loyalty_points_to_apply_for_calc = loyalty_blocks * 100
-
                 loyalty_discount_percentage = loyalty_blocks * 5.0
                 loyalty_discount_percentage = min(loyalty_discount_percentage, 100.0)
-
-                # Loyalty discount is applied on the price *after* any package discount
                 loyalty_discount_amount = price_before_loyalty_calc * (loyalty_discount_percentage / 100.0)
 
             rec.loyalty_points_used = loyalty_points_to_apply_for_calc
-            rec.price_after_loyalty = price_before_loyalty_calc - loyalty_discount_amount
-
-            if rec.price_after_loyalty < 0:
-                rec.price_after_loyalty = 0.0
-
-            # This is the crucial monetary discount field for the invoice
+            rec.price_after_loyalty = max(price_before_loyalty_calc - loyalty_discount_amount, 0.0)
             rec.discount_amount = package_built_in_discount_value + loyalty_discount_amount
-
 
     @api.depends('total_price', 'price_after_loyalty', 'select_package', 'price_after_discount')
     def _compute_total(self):

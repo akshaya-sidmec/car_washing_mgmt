@@ -11,6 +11,17 @@ class WasherJobInvoice(models.Model):
     x_final_amount = fields.Float(string="Final Amount")
     x_loyalty_discount_percentage = fields.Float(string="Loyalty Discount (%)", readonly=True)
 
+    @api.depends('amount_total')
+    def _compute_actual_amount(self):
+        for rec in self:
+            rec.actual_amount = rec.amount_total  # Replace with correct logic if needed
+
+    @api.depends('actual_amount', 'loyalty_discount_percentage')
+    def _compute_final_amount(self):
+        for rec in self:
+            discount_amt = (rec.loyalty_discount_percentage / 100) * rec.actual_amount
+            rec.final_amount = rec.actual_amount - discount_amt
+
 
 class InvoiceLines(models.Model):
     _inherit = 'account.move.line'

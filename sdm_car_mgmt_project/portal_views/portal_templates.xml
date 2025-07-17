@@ -1,0 +1,197 @@
+<odoo>
+  <template id="portal_booking_detail" name="Booking Detail">
+    <t t-call="portal.portal_layout">
+      <t t-set="page_name" t-value="'bookings'"/>
+      <div id="portal_content" class="container-xl py-5">
+
+        <!-- Booking Status -->
+        <p>
+          <strong>Status:</strong>
+          <t t-if="job">
+            <span t-att-class="{
+              'badge rounded-pill bg-secondary': job.state == 'draft',
+              'badge rounded-pill bg-primary': job.state == 'assigned',
+              'badge rounded-pill bg-info text-dark': job.state == 'in_progress',
+              'badge rounded-pill bg-warning text-dark': job.state == 'quality_check',
+              'badge rounded-pill bg-dark': job.state == 'ready_to_deliver',
+              'badge rounded-pill bg-success': job.state in ['paid', 'service_completed'],
+              'badge rounded-pill bg-purple': job.state == 'delivered',
+              'badge rounded-pill bg-danger': job.state == 'cancelled'
+            }" style="font-size: 0.9rem; padding: 0.4em 0.8em; margin-left: 0.5em;">
+              <t t-esc="dict([
+                ('draft', 'Draft'),
+                ('assigned', 'Assigned'),
+                ('in_progress', 'In Progress'),
+                ('work_done', 'Work Done'),
+                ('quality_check', 'Quality Check'),
+                ('ready_to_deliver', 'Ready to Deliver'),
+                ('payment_verification', 'Payment Verification'),
+                ('paid', 'Paid'),
+                ('service_completed', 'Service Completed'),
+                ('delivered', 'Delivered'),
+                ('cancelled', 'Cancelled')
+              ])[job.state]"/>
+            </span>
+          </t>
+        </p>
+
+        <!-- Cancelled Message -->
+        <t t-if="job.state == 'cancelled'">
+          <div class="alert alert-danger d-flex align-items-center justify-content-center text-center" role="alert">
+            <i class="fa fa-ban me-2"></i>
+            This job has been <strong class="ms-1">cancelled</strong>.
+          </div>
+        </t>
+
+        <!-- Heading -->
+        <div class="text-center mb-5">
+          <h1 class="fw-bold display-6">Booking <t t-esc="booking.invoice_number"/></h1>
+        </div>
+
+        <!-- Booking & Vehicle Info -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-gradient bg-primary text-white">Booking Info</div>
+              <div class="card-body">
+                <p><strong>Branch:</strong> <t t-esc="booking.branch_id.name"/></p>
+                <p><strong>Scheduled:</strong> <t t-esc="booking.time_slot"/></p>
+                <p><strong>Package:</strong> <t t-esc="booking.package_id.name"/></p>
+                <p><strong>Package Price:</strong> ₹<t t-esc="booking.package_price"/></p>
+                <p><strong>Total Price:</strong> ₹<t t-esc="booking.total_price"/></p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-dark text-white">Vehicle Info</div>
+              <div class="card-body">
+                <p><strong>Name:</strong> <t t-esc="booking.vehicle_name"/></p>
+                <p><strong>Number:</strong> <t t-esc="booking.vehicle_number"/></p>
+                <p><strong>Type:</strong> <t t-esc="booking.vehicle_type"/></p>
+                <p><strong>Customer:</strong> <t t-esc="booking.customer_id.name"/></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Included Services -->
+        <t t-if="booking.package_service_ids">
+          <div class="mb-4">
+            <h5 class="fw-semibold text-muted">Included Services</h5>
+            <div class="d-flex flex-wrap gap-2">
+              <t t-foreach="booking.package_service_ids" t-as="srv">
+                <span class="badge bg-secondary px-3 py-2"><t t-esc="srv.name"/></span>
+              </t>
+            </div>
+          </div>
+        </t>
+
+        <!-- Checklist -->
+        <t t-if="booking.job_id and booking.job_id.checklist_line_ids">
+          <div class="mb-4">
+            <h5 class="fw-semibold text-muted">Job Checklist</h5>
+            <div class="list-group">
+              <t t-foreach="booking.job_id.checklist_line_ids" t-as="check">
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <span><t t-esc="check.name"/></span>
+                  <span t-if="check.is_done" class="badge bg-success">✔ Done</span>
+                  <span t-if="not check.is_done" class="badge bg-danger">✘ Not Done</span>
+                </div>
+              </t>
+            </div>
+          </div>
+        </t>
+
+        <!-- Before / After Photos -->
+        <t t-if="job and (job.before_photos or job.after_photos)">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6 class="fw-semibold text-muted">Before</h6>
+              <t t-foreach="job.before_photos" t-as="photo">
+                <img t-att-src="'/web/content/%s?download=false' % photo.id" class="img-fluid rounded shadow-sm mb-2"/>
+              </t>
+            </div>
+            <div class="col-md-6">
+              <h6 class="fw-semibold text-muted">After</h6>
+              <t t-foreach="job.after_photos" t-as="photo">
+                <img t-att-src="'/web/content/%s?download=false' % photo.id" class="img-fluid rounded shadow-sm mb-2"/>
+              </t>
+            </div>
+          </div>
+        </t>
+
+        <!-- Feedback Form -->
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+          <div class="card-body">
+            <h5 class="fw-semibold mb-3">Your Feedback</h5>
+            <form method="post" t-att-action="'/my/booking/%s/feedback' % booking.id">
+              <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+              <div class="rating-stars d-flex flex-row-reverse justify-content-start mb-3">
+                <input type="radio" id="star5" name="rating" value="5" t-att-checked="'checked' if booking.rating == '5' else ''"/>
+                <label for="star5" title="5 stars">★</label>
+                <input type="radio" id="star4" name="rating" value="4" t-att-checked="'checked' if booking.rating == '4' else ''"/>
+                <label for="star4" title="4 stars">★</label>
+                <input type="radio" id="star3" name="rating" value="3" t-att-checked="'checked' if booking.rating == '3' else ''"/>
+                <label for="star3" title="3 stars">★</label>
+                <input type="radio" id="star2" name="rating" value="2" t-att-checked="'checked' if booking.rating == '2' else ''"/>
+                <label for="star2" title="2 stars">★</label>
+                <input type="radio" id="star1" name="rating" value="1" t-att-checked="'checked' if booking.rating == '1' else ''"/>
+                <label for="star1" title="1 star">★</label>
+              </div>
+              <div class="mb-3">
+                <textarea name="comment" class="form-control" rows="3" placeholder="Comments..."><t t-esc="booking.feedback or ''"/></textarea>
+              </div>
+              <button type="submit" class="btn btn-success">Submit Feedback</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Cancel Form (Only if in draft) -->
+        <t t-if="job.state == 'draft'">
+          <form t-att-action="'/my/bookings/%s/cancel' % booking.id" method="post" class="mb-4">
+            <div class="card border border-danger-subtle shadow-sm">
+              <div class="card-body">
+                <h5 class="text-danger fw-semibold mb-3">Cancel Booking</h5>
+                <div class="mb-3">
+                  <label class="form-label">Reason for Cancellation</label>
+                  <textarea name="cancel_reason" class="form-control" rows="2" required="required"
+                            placeholder="Please tell us why you're cancelling..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger">
+                  <i class="fa fa-times-circle me-1"></i> Cancel Booking
+                </button>
+              </div>
+            </div>
+          </form>
+        </t>
+
+        <!-- Footer Nav -->
+        <div class="d-flex justify-content-between mt-4">
+          <a t-attf-href="/my/bookings" class="btn btn-outline-secondary">← Back to Bookings</a>
+        </div>
+
+        <!-- Star Rating CSS -->
+        <style>
+        .rating-stars {
+            direction: rtl;
+            font-size: 1.6em;
+        }
+        .rating-stars input {
+            display: none;
+        }
+        .rating-stars label {
+            color: #ccc;
+            cursor: pointer;
+        }
+        .rating-stars input:checked ~ label,
+        .rating-stars label:hover,
+        .rating-stars label:hover ~ label {
+            color: #ffc107;
+        }
+        </style>
+
+      </div>
+    </t>
+  </template>
+</odoo>

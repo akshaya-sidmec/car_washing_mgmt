@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="portal_my_bookings_page" name="My Bookings">
+    <t t-call="portal.portal_layout">
+      <t t-set="page_name" t-value="'bookings'"/>
+      <div class="container mt-4">
+        <h2 class="mb-3">🧼 My Car Wash Bookings</h2>
+        <table class="table table-hover table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th>Booking ID</th>
+              <th>Vehicle</th>
+              <th>Service</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="bookings" t-as="b">
+              <tr>
+                <td>
+                  <a t-attf-href="/my/bookings/{{ b.id }}">
+                    <t t-esc="b.invoice_number"/>
+                  </a>
+                </td>
+                <td>
+                  <t t-esc="b.job_id.vehicle_name or '-'"/>
+                </td>
+                <td>
+                  <t t-if="b.job_id.service_ids">
+                    <t t-foreach="b.job_id.service_ids" t-as="s">
+                      <span class="badge text-bg-secondary me-1">
+                        <t t-esc="s.name"/>
+                      </span>
+                    </t>
+                  </t>
+                  <t t-if="not b.job_id.service_ids">-</t>
+                </td>
+                <td>
+                  <t t-esc="b.time_slot.strftime('%Y-%m-%d %H:%M') if b.time_slot else '-'"/>
+                </td>
+                <td>
+                  <t t-set="badge_class" t-value="{
+                      'draft': 'secondary',
+                      'confirmed': 'info',
+                      'scheduled': 'primary',
+                      'completed': 'success',
+                      'cancelled': 'danger'
+                    }.get(b.state, 'secondary')"/>
+                  <span t-att-class="'badge bg-' + badge_class">
+                    <t t-esc="b.state.capitalize()"/>
+                  </span>
+                </td>
+                <td>
+                  <a t-attf-href="/my/bookings/{{ b.id }}" class="btn btn-sm btn-outline-primary">View</a>
+                </td>
+              </tr>
+            </t>
+          </tbody>
+        </table>
+      </div>
+    </t>
+  </template>
+</odoo>

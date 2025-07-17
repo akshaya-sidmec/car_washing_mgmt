@@ -1,0 +1,44 @@
+<odoo>
+  <template id="portal_my_home_custom_all_icons" inherit_id="portal.portal_my_home">
+    <xpath expr="//div[hasclass('o_portal_docs')]" position="replace">
+      <div class="container mt-5 mb-5">
+        <div class="row justify-content-center text-center g-4">
+
+<!--          carwash booking-->
+          <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+              <div class="card-body d-flex flex-column align-items-center p-4">
+                <h5 class="fw-bold mb-2">Book a Car Wash</h5>
+                <p class="text-muted small">Schedule a car wash at your preferred branch and time.</p>
+                <a href="/my/bookings/new" class="btn btn-primary btn-sm w-75 mt-2">Book Now</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bookings -->
+          <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+              <div class="card-body d-flex flex-column align-items-center p-4">
+                <h5 class="fw-bold mb-2">My Bookings</h5>
+                <p class="text-muted small">View or manage your past and upcoming appointments.</p>
+                <a href="/my/bookings" class="btn btn-primary btn-sm w-75 mt-2">View Bookings</a>
+              </div>
+            </div>
+          </div>
+
+          <!--Invoices -->
+          <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+              <div class="card-body d-flex flex-column align-items-center p-4">
+                <h5 class="fw-bold mb-2">My Invoices</h5>
+                <p class="text-muted small">Download or pay your service invoices anytime.</p>
+                <a href="/my/invoices" class="btn btn-primary btn-sm w-75 mt-2">View Invoices</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </xpath>
+  </template>
+</odoo>

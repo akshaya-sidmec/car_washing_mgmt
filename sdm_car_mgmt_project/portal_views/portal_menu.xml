@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <template id="portal_home_menu_bookings" name="Portal Home Bookings" inherit_id="portal.portal_my_home">
+    <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+      <div class="row o_portal_docs">
+        <div class="col-12 col-sm-6 col-lg-4 mb-3">
+          <a href="/my/bookings" class="btn btn-outline-primary w-100">
+            <i class="fa fa-calendar-check-o me-2"></i> My Bookings
+          </a>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-4 mb-3">
+          <a href="/my/invoices" class="btn btn-outline-success w-100">
+            <i class="fa fa-file-invoice-dollar me-2"></i> My Invoices
+          </a>
+        </div>
+      </div>
+    </xpath>
+  </template>
+</odoo>

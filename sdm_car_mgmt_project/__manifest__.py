@@ -31,6 +31,12 @@
         "views/view_dashboard.xml",
         "views/view_feedback.xml",
         # "views/invoices.xml",
+        "portal_views/portal_booking_form.xml",
+        "portal_views/portal_breadcrumbs.xml",
+        "portal_views/portal_home_menu.xml",
+        "portal_views/portal_menu.xml",
+        "portal_views/portal_my_bookings_page.xml",
+        "portal_views/portal_templates.xml",
         "views/menu.xml",
     ],
 

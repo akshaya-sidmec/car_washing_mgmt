@@ -10,6 +10,16 @@ class WasherJobInvoice(models.Model):
     x_discount = fields.Char(string="Discount")
     x_final_amount = fields.Float(string="Final Amount")
     x_loyalty_discount_percentage = fields.Float(string="Loyalty Discount (%)", readonly=True)
+    display_loyalty_discount = fields.Char(
+        compute="_compute_display_loyalty_discount",
+        string="Loyalty (%)",
+        store=False
+    )
+
+    @api.depends('x_loyalty_discount_percentage')
+    def _compute_display_loyalty_discount(self):
+        for rec in self:
+            rec.display_loyalty_discount = f"{int(rec.x_loyalty_discount_percentage * -1)}%"
 
     @api.depends('amount_total')
     def _compute_actual_amount(self):

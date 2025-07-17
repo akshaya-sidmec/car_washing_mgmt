@@ -6,6 +6,19 @@ class WasherJobInvoice(models.Model):
     _inherit = 'account.move'
 
     washer_job_id = fields.Many2one('car.wash.job', string='Washer Job')
+    x_actual_amount = fields.Monetary(string="Actual Amount", currency_field='currency_id', readonly=True)
+    x_discount = fields.Char(string="Discount")
+    x_final_amount = fields.Float(string="Final Amount")
+    x_loyalty_discount_percentage = fields.Float(string="Loyalty Discount (%)", readonly=True)
+
+
+class InvoiceLines(models.Model):
+    _inherit = 'account.move.line'
+
+    booking = fields.Many2one("car.wash.booking", string="Booking")
+    booking_discount = fields.Float(related='booking.discount', string="Booking Discount", readonly=True)
+    booking_price_after_discount = fields.Float(related='booking.price_after_discount', string="Booking Price After Discount", readonly=True)
+
 
 
 class CarWashJob(models.Model):

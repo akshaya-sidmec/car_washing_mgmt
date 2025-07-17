@@ -8,6 +8,7 @@ class CarWashPackage(models.Model):
     name = fields.Char(required=True, string="Package Name")
     price = fields.Float(string="Package Price", compute='_compute_package_price', store=True, readonly=True)
     service_ids = fields.Many2many('car.wash.service', string="Included Services")
+    discount=fields.Integer("Discount(%)",default="10")
 
     @api.depends('service_ids')
     def _compute_package_price(self):

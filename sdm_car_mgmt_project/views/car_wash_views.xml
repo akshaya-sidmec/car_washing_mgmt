@@ -44,97 +44,115 @@
                     <!--                    <button name="action_apply_promo" string="Apply Promo" type="object" class="btn-secondary" invisible="not apply_promo"/>-->
                     <!--                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>-->
                     <button name="action_confirm_booking" string="Confirm Booking" type="object" class="btn-primary"/>
+                    <!--                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>-->
                     <button name="action_print_report" string="Print" type="object" class="btn-primary"/>
-                    <!--                    <button name="action_send_booking_email"-->
-                    <!--                            string="Send Mail Invoice"-->
-                    <!--                            type="object"-->
-                    <!--                            class="btn-primary"/>-->
+                    <!--                    <button name="action_send_booking_email"
+                                                string="Send Mail Invoice"
+                                                type="object"
+                                                class="btn-primary"/>-->
                     <button name="action_open_send_wizard"
                             type="object"
                             string="Send"
                             class="oe_highlight"
                             invisible="state != 'confirmed'"/>
-
-
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,scheduled"/>
-                    <!--                    <button name="action_register_payment" type="object" string="Register Payment" class="btn-primary"-->
-                    <!--                            invisible="state != 'confirmed' and payment_state == 'paid'"/>-->
+                    <!--                    <button name="action_register_payment" type="object" string="Register Payment" class="btn-primary"
+                                                invisible="state != 'confirmed' and payment_state == 'paid'"/>-->
                 </header>
+
                 <sheet>
                     <h1>
                         <field name="invoice_number" placeholder="Invoice Number" readonly="1"/>
                     </h1>
-                    <group>
-                        <group string="Choose Service, Vehicle and Slot Time">
-                            <field name="customer_id"/>
 
+                    <group colspan="2">
+                        <group string="Customer and Vehicle Info">
+                            <field name="customer_id"/>
                             <field name="vehicle_number"/>
                             <field name="vehicle_name"/>
                             <field name="vehicle_type"/>
-
-                            <!--                            <field name="vehicle_id"/>-->
-                            <!--                            <field name="license_plate_id_1"/>-->
+                        </group>
+                        <group string="Branch and Slot">
                             <field name="branch_id"/>
-                            <!--                            <field name="service_id"/>-->
-                            <field name="select_package" widget="radio"/>
-                            <field name="service_ids" widget="many2many_tags" invisible="select_package != 'service'"/>
-
-
-                            <field name="package_id"
-                                   invisible="select_package != 'package'"/>
-
-
-                            <field name="package_service_ids"
-                                   widget="many2many_tags"
-                                   readonly="1"
-                                   invisible="select_package != 'package'"/>
-
-                            <field name="package_price"
-                                   readonly="1"
-                                   invisible="select_package != 'package'"/>
-
-                            <field name="total_price" invisible="select_package != 'service'"/>
                             <field name="time_slot"/>
+                        </group>
+                    </group>
+
+                    <group string="Service Type Selection" colspan="2">
+                        <field name="select_package" widget="radio"/>
+                    </group>
+
+                    <group colspan="2" invisible="select_package != 'service'">
+                        <group>
+                            <field name="service_ids" widget="many2many_tags"/>
+                            <field name="total_price"/>
+                        </group>
+                        <group>
+                            <field name="apply_loyalty_discount" invisible="customer_id.loyalty_wallet == 0"/>
+                            <field name="price_after_loyalty" readonly="1" force_save="1"
+                                   invisible="not apply_loyalty_discount"/>
+                        </group>
+                    </group>
+
+                    <group colspan="2" invisible="select_package != 'package'">
+                        <group>
+                            <field name="package_id"/>
+                            <field name="package_service_ids" widget="many2many_tags" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="package_price" readonly="1"/>
+                            <field name="discount" readonly="1"/>
+                            <field name="price_after_discount" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Invoicing" colspan="2">
+                        <group>
                             <button name="action_create_invoice" string="Create Invoice" type="object"
                                     class="btn-primary"/>
                             <field name="invoice_id" readonly="1"/>
+                        </group>
+                        <group>
                             <field name="invoice_status" readonly="1" widget="badge"
                                    decoration-danger="invoice_status == 'not_paid'"
                                    decoration-success="invoice_status == 'paid'"/>
                             <field name="job_status" readonly="1" widget="badge"/>
-                            <!--                            <field name="rating"/>-->
-                            <!--                            <field name="feedback" placeholder="Enter feedback here..."/>-->
                         </group>
-
-                        <!--                        <group string="Apply Promo code">-->
-                        <!--                            <field name="apply_promo"/>-->
-                        <!--                            <field name="promo_code" invisible="not apply_promo"/>-->
-                        <!--                            <field name="loyalty_points_used" invisible="not apply_promo"/>-->
-                        <!--                            <field name="discount_amount" readonly="1" invisible="not apply_promo"/>-->
-                        <!--                            <field name="amount_total" readonly="1" invisible="not apply_promo"/>-->
-                        <!--                            <button name="action_apply_promo" string="Apply Promo" type="object"-->
-                        <!--                                    class="btn-outline-secondary" invisible="not apply_promo"/>-->
-                        <!--                        </group>-->
                     </group>
 
+                    <group string="Feedback" colspan="2">
+                        <field name="rating"/>
+                        <field name="feedback" placeholder="Enter feedback here..."/>
+                    </group>
 
-                    <!--                    <group string="Booking Status and Schedule">-->
-                    <!--                        <field name="washer_id"/>-->
-                    <!--                        <field name="job_id"/>-->
-                    <!--                    </group>-->
-                    <notebook>
-                        <page string="Customer Feedback">
-                            <field name="feedback_ids" readonly="1">
-                                <list string="Feedback">
-                                    <field name="customer_id"/>
-                                    <field name="rating"/>
-                                    <field name="feedback"/>
-                                    <field name="create_date"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
+                    <!--                        <group string="Apply Promo code">
+                                                <field name="apply_promo"/>
+                                                <field name="promo_code" invisible="not apply_promo"/>
+                                                <field name="loyalty_points_used" invisible="not apply_promo"/>
+                                                <field name="discount_amount" readonly="1" invisible="not apply_promo"/>
+                                                <field name="amount_total" readonly="1" invisible="not apply_promo"/>
+                                                <button name="action_apply_promo" string="Apply Promo" type="object"
+                                                        class="btn-outline-secondary" invisible="not apply_promo"/>
+                                            </group>-->
+
+                    <!--                    <group string="Booking Status and Schedule">
+                                            <field name="washer_id"/>
+                                            <field name="job_id"/>
+                                        </group>-->
+                    <!--                    <notebook>
+                                            <page string="Customer Feedback">
+                                                <field name="feedback_ids" readonly="1">
+                                                    <list string="Feedback">
+                                                        <field name="customer_id"/>
+                                                        <field name="rating"/>
+                                                        <field name="feedback"/>
+                                                        <field name="create_date"/>
+                                                    </list>
+                                                </field>
+                                            </page>
+                                        </notebook>-->
                 </sheet>
+
                 <chatter/>
             </form>
         </field>

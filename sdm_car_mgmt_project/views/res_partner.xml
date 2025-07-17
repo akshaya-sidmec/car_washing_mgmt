@@ -32,6 +32,12 @@
             </xpath>
 
             <xpath expr="//notebook" position="inside">
+                <page string="Car Wash Loyalty">
+                    <group>
+                        <field name="visit_count" readonly="1"/>
+                        <field name="loyalty_wallet" readonly="1"/>
+                    </group>
+                </page>
                 <page string="Car Wash History">
                     <field name="car_wash_history_ids">
                         <list string="Car Wash Jobs">
@@ -45,6 +51,7 @@
                         </list>
                     </field>
                 </page>
+
             </xpath>
 
         </field>

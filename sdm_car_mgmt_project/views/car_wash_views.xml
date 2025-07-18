@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <!-- Menu -->
 
-
-    <!-- Booking Action & Views -->
     <record id="view_car_wash_booking_list" model="ir.ui.view">
         <field name="name">car.wash.booking.list</field>
         <field name="model">car.wash.booking</field>
@@ -13,24 +10,16 @@
                 <field name="invoice_number"/>
                 <field name="customer_id"/>
                 <field name="vehicle_number"/>
-                <!--                <field name="vehicle_name"/>-->
-                <!--                <field name="vehicle_type"/>-->
-                <!--                <field name="vehicle_id"/>-->
-                <!--                <field name="license_plate_id_1"/>-->
                 <field name="branch_id"/>
-                <!--                <field name="service_id"/>-->
                 <field name="service_ids" widget="many2many_tags"/>
                 <field name="package_id"/>
-                <!--                <field name="package_service_ids" widget="many2many_tags"/>-->
                 <field name="time_slot"/>
-                <!--                <field name="amount_total"/>-->
                 <field name="total_price"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'"
                        decoration-success="state == 'confirmed'"/>
                 <field name="job_status" readonly="1" widget="badge"/>
                 <field name="invoice_status" widget="badge" decoration-danger="invoice_status == 'not_paid'"
                        decoration-success="invoice_status == 'paid'"/>
-
             </list>
         </field>
     </record>
@@ -41,23 +30,15 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <!--                    <button name="action_apply_promo" string="Apply Promo" type="object" class="btn-secondary" invisible="not apply_promo"/>-->
-                    <!--                    <button name="action_schedule_job" string="Schedule Job" type="object" class="btn-success"/>-->
                     <button name="action_confirm_booking" string="Confirm Booking" type="object" class="btn-primary"/>
-                    <!--                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>-->
                     <button name="action_print_report" string="Print" type="object" class="btn-primary"/>
-                    <!--                    <button name="action_send_booking_email"
-                                                string="Send Mail Invoice"
-                                                type="object"
-                                                class="btn-primary"/>-->
                     <button name="action_open_send_wizard"
                             type="object"
                             string="Send"
                             class="oe_highlight"
+                            icon="fa-envelope"
                             invisible="state != 'confirmed'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,scheduled"/>
-                    <!--                    <button name="action_register_payment" type="object" string="Register Payment" class="btn-primary"
-                                                invisible="state != 'confirmed' and payment_state == 'paid'"/>-->
                 </header>
 
                 <sheet>
@@ -125,20 +106,6 @@
                         <field name="feedback" placeholder="Enter feedback here..."/>
                     </group>
 
-                    <!--                        <group string="Apply Promo code">
-                                                <field name="apply_promo"/>
-                                                <field name="promo_code" invisible="not apply_promo"/>
-                                                <field name="loyalty_points_used" invisible="not apply_promo"/>
-                                                <field name="discount_amount" readonly="1" invisible="not apply_promo"/>
-                                                <field name="amount_total" readonly="1" invisible="not apply_promo"/>
-                                                <button name="action_apply_promo" string="Apply Promo" type="object"
-                                                        class="btn-outline-secondary" invisible="not apply_promo"/>
-                                            </group>-->
-
-                    <!--                    <group string="Booking Status and Schedule">
-                                            <field name="washer_id"/>
-                                            <field name="job_id"/>
-                                        </group>-->
                     <!--                    <notebook>
                                             <page string="Customer Feedback">
                                                 <field name="feedback_ids" readonly="1">
@@ -167,7 +134,6 @@
     </record>
 
 
-    <!-- Services -->
     <record id="view_car_wash_service_list" model="ir.ui.view">
         <field name="name">car.wash.service.list</field>
         <field name="model">car.wash.service</field>
@@ -191,7 +157,6 @@
                         <field name="product_id" widget="many2many_tags"/>
                         <field name="Description"/>
                     </group>
-
                 </sheet>
             </form>
         </field>
@@ -204,7 +169,6 @@
     </record>
 
 
-    <!-- Vehicles -->
     <record id="view_car_vehicle_list" model="ir.ui.view">
         <field name="name">car.vehicle.list</field>
         <field name="model">car.vehicle</field>
@@ -213,7 +177,6 @@
                 <field name="customer_id"/>
                 <field name="vehicle_id"/>
                 <field name="license_plate"/>
-                <!--                <field name="name"/>-->
             </list>
         </field>
     </record>
@@ -241,7 +204,6 @@
     </record>
 
 
-    <!-- Branches -->
     <record id="view_car_branch_list" model="ir.ui.view">
         <field name="name">car.branch.list</field>
         <field name="model">car.branch</field>
@@ -284,7 +246,6 @@
 
                 <separator/>
 
-                <!-- Filters -->
                 <filter string="Draft" name="filter_draft" domain="[('state','=','draft')]"/>
                 <filter string="Confirmed" name="filter_confirmed" domain="[('state','=','confirmed')]"/>
 
@@ -295,7 +256,6 @@
 
                 <separator/>
 
-                <!-- Group By Options -->
                 <group expand="0" string="Group By">
                     <filter string="Scheduled Date" name="group_schedule" context="{'group_by':'time_slot'}"/>
                     <filter string="Customer" name="group_customer" context="{'group_by':'customer_id'}"/>

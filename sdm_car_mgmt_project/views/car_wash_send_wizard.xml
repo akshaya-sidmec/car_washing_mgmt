@@ -25,7 +25,8 @@
 
                 <group>
                     <group>
-<!--                        <field name="mail_attachments_widget" widget="mail_attachments"/>-->
+
+                        <!--                        <field name="mail_attachments_widget" widget="mail_attachments"/>-->
 
                         <!--                        <field name="mail_attachments_widget" widget="mail_attachments" string="Attach a file"-->
                         <!--                               nolabel="1" colspan="2"/>-->

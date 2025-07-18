@@ -15,7 +15,7 @@ class CarWashBooking(models.Model):
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = "invoice_number"
 
-    customer_id = fields.Many2one('res.partner', string="Customer", required=True)
+    customer_id = fields.Many2one('res.partner', string="Customer", required=True, domain=[('is_customer', '=', True)])
     vehicle_number = fields.Char(string="Vehicle Number")
     vehicle_name = fields.Char(string="Vehicle Name")
     vehicle_type = fields.Char(string="Vehicle Type")
@@ -207,11 +207,7 @@ class CarWashBooking(models.Model):
 
     @api.depends('service_ids', 'service_ids.price', 'select_package', 'package_id.price')
     def _compute_total_price(self):
-        """
-        Computes the base total price before any additional discounts (like loyalty).
-        If a package is selected, it's the package's original price.
-        If services are selected, it's the sum of service prices.
-        """
+
         for record in self:
             if record.select_package == 'package' and record.package_id:
                 record.total_price = record.package_id.price
@@ -232,10 +228,10 @@ class CarWashBooking(models.Model):
             package_built_in_discount_value = 0.0
 
             if rec.select_package == 'package':
-                price_before_loyalty_calc = rec.price_after_discount  # This is price after package's own % discount
+                price_before_loyalty_calc = rec.price_after_discount
                 package_built_in_discount_value = rec.package_price - rec.price_after_discount
             else:
-                price_before_loyalty_calc = rec.total_price  # This is sum of service prices
+                price_before_loyalty_calc = rec.total_price
                 package_built_in_discount_value = 0.0
 
             loyalty_discount_amount = 0.0
@@ -248,7 +244,7 @@ class CarWashBooking(models.Model):
                 loyalty_discount_percentage = loyalty_blocks * 5.0
                 loyalty_discount_percentage = min(loyalty_discount_percentage, 100.0)
 
-                # Loyalty discount is applied on the price *after* any package discount
+
                 loyalty_discount_amount = price_before_loyalty_calc * (loyalty_discount_percentage / 100.0)
 
             rec.loyalty_points_used = loyalty_points_to_apply_for_calc
@@ -257,7 +253,6 @@ class CarWashBooking(models.Model):
             if rec.price_after_loyalty < 0:
                 rec.price_after_loyalty = 0.0
 
-            # This is the crucial monetary discount field for the invoice
             rec.discount_amount = package_built_in_discount_value + loyalty_discount_amount
 
     @api.depends('total_price', 'price_after_loyalty', 'select_package', 'price_after_discount')
@@ -313,12 +308,8 @@ class CarWashBooking(models.Model):
             vals['package_price'] = package.price
             vals['package_service_ids'] = [(6, 0, package.service_ids.ids)]
 
-        # Call super() first to create the record
         record = super(CarWashBooking, self).create(vals)
 
-        # Logic to update visit_count and loyalty_wallet on customer
-        # This will trigger IF the booking is created directly in 'confirmed' state.
-        # If your default state is 'draft', this won't trigger on creation, but on write/confirm button.
         if record.state == 'confirmed' and record.customer_id:
             record.customer_id.visit_count += 1
             if record.customer_id.visit_count % 3 == 0:
@@ -336,13 +327,11 @@ class CarWashBooking(models.Model):
         res = super(CarWashBooking, self).write(vals)
 
         for rec in self:
-            # Handle visit count and loyalty wallet on confirming booking
             if state_becomes_confirmed and rec.customer_id:
                 rec.customer_id.visit_count += 1
                 if rec.customer_id.visit_count % 3 == 0:
                     rec.customer_id.loyalty_wallet += 100
 
-            # Update package details if package_id changed
             if 'package_id' in vals and rec.package_id:
                 rec.package_price = rec.package_id.price
                 rec.discount = rec.package_id.discount
@@ -357,14 +346,21 @@ class CarWashBooking(models.Model):
         invoice_number = self.invoice_number or "N/A"
         invoice_id = self.invoice_id.name or "N/A"
         total_amount = self.total_price or 0.0
-        currency_symbol = self.currency_id.symbol or "₹"  # Make sure currency_id is defined in your model
+        currency_symbol = self.currency_id.symbol or "₹"
         branch_name = self.branch_id.name or "Branch"
         parent_company_id = self.parent_company_id.name or "Company"
+        status_display = {
+            'paid': 'Paid',
+            'not_paid': 'Pending',
+        }
+        invoice_status_label = status_display.get(self.invoice_status, "Pending")
 
         body = (
             f"Dear {customer_name},<br/><br/>"
             f"Here is your Booking ID <strong>[{invoice_number}]</strong> and invoice Number <strong>[{invoice_id}]</strong>.<br/>"
-            f"Amounting in {currency_symbol}&nbsp;<strong>{total_amount:.2f}</strong>.<br/><br/>"
+            f"Amounting in {currency_symbol}&nbsp;<strong>{total_amount:.2f}</strong>.<br/>"
+            f"Payment Status: <strong>{invoice_status_label}</strong><br/>"
+            f"Please complete your payment if it's pending, or relax if it's already done.<br/>We look forward to providing you with the best service!<br/><br/>"
             f"Do not hesitate to contact us if you have any questions.<br/><br/>"
             f"--<br/>{branch_name}<br/>{parent_company_id}"
         )
@@ -383,6 +379,8 @@ class CarWashBooking(models.Model):
             }
         }
 
+
+
     def action_print_report(self):
         if self.invoice_status == 'not_paid':
             return self.env.ref('sdm_car_mgmt_project.report_car_wash_booking_unpaid').report_action(self)
@@ -391,17 +389,16 @@ class CarWashBooking(models.Model):
 
     def action_confirm_booking(self):
         template_id = self.env.ref('sdm_car_mgmt_project.mail_template_booking_confirm')
+
         for rec in self:
             if rec.state != 'draft':
                 continue
 
             rec.state = 'confirmed'
 
-            # Send confirmation email
             if template_id:
                 template_id.send_mail(rec.id, force_send=True)
 
-            # Automatically create job on confirmation
             job = self.env['car.wash.job'].create({
                 'booking_id': rec.id,
                 'washer_id': rec.washer_id.id,

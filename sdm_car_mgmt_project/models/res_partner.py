@@ -1,11 +1,9 @@
 from odoo import models, fields, api
 
-class InheritHrEmployee(models.Model):
-    _inherit = 'hr.employee'
-
 class InheritContacts(models.Model):
     _inherit = 'res.partner'
 
+    is_customer = fields.Boolean(string="Customer")
     car_wash_history_ids = fields.One2many(
         'car.wash.job', 'customer_id', string="Car Wash History")
     visit_count = fields.Integer("Visit Count", default=0)

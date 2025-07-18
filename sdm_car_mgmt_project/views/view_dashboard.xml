@@ -48,7 +48,7 @@
         <field name="model">board.board</field>
         <field name="type">form</field>
         <field name="arch" type="xml">
-            <form string="Car Management Dashboard">
+            <form string="Car Management Dashboard" create="false" edit="false">
                 <board style="2-2">
                     <column>
                         <action string="Jobs by Status"

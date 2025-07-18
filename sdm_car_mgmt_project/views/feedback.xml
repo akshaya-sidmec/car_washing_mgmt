@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <!-- views/feedback_template.xml -->
     <template id="feedback_form">
         <t t-name="sdm_car_mgmt_project.feedback_form">
             <html>

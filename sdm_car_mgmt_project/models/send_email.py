@@ -22,13 +22,11 @@ class CarWashSendWizard(models.TransientModel):
         if not template:
             raise UserError("Please select a template to send.")
 
-        # Attachments from widget
         attachment_ids = self.mail_attachments_widget.ids
 
-        # Prepare email context
         ctx = {
             'default_model': 'car.wash.booking',
-            'default_res_id': self.booking_id.id,
+            'default_res_ids': [self.booking_id.id],
             'default_use_template': True,
             'default_template_id': template.id,
             'default_composition_mode': 'comment',

@@ -156,10 +156,8 @@ class CarWashJob(models.Model):
 
         booking = job.booking_id
 
-        # Merge all service names from both service_ids and package_service_ids
         all_services = booking.service_ids | booking.package_service_ids
 
-        # Create checklist lines
         checklist_lines = [(0, 0, {'name': service.name, 'is_done': False}) for service in all_services]
 
         job.checklist_line_ids = checklist_lines
@@ -223,7 +221,6 @@ class CarWashJob(models.Model):
 
         for job in self:
 
-            # Create the picking
             picking = StockPicking.create({
                 'picking_type_id': picking_type.id,
                 'location_id': stock_location.id,
@@ -231,7 +228,6 @@ class CarWashJob(models.Model):
                 'origin': f'Car Wash Job {job.booking_id.display_name or job.id}',
             })
 
-            # Use a set to avoid duplicate moves
             product_ids = set()
             services = job.service_ids | job.package_service_ids
 
@@ -321,10 +317,6 @@ class CarWashJob(models.Model):
 
     def action_open_related_invoices(self):
         self.ensure_one()
-        # if self.invoice_status != 'paid':
-        #     raise UserError("Invoices are visible only after payment is marked as Paid.")
-        # if not self.related_invoice_ids:
-        #     raise UserError("No invoices found for this job.")
 
         return {
             'type': 'ir.actions.act_window',

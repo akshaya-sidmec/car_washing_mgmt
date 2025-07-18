@@ -99,7 +99,8 @@
                                         <strong>Payment Status:</strong>
                                     </td>
                                     <td>
-                                        <t t-esc="doc.invoice_status"/>
+                                        <t t-if="doc.invoice_status == 'paid'">Paid</t>
+                                        <t t-elif="doc.invoice_status == 'not_paid'">Pending</t>
                                     </td>
                                 </tr>
                             </tbody>
@@ -113,7 +114,8 @@
                         <p>
                             We'd love to hear your thoughts —
                             <br/>
-                            <a t-att-href="'/feedback/%s' % doc.id">Click here to rate our service</a>
+                            <a t-att-href="'/feedback/%s' % doc.id">Click here to rate our service
+                            </a>
                         </p>
 
                         <p style="margin-top: 50px;">Sincerely,<br/>The Car Wash Team
